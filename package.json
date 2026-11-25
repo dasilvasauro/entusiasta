@@ -9,7 +9,7 @@
   "scripts": {
     "desktop": "electron .",
     "deb": "electron-builder --linux deb --publish never",
-    "android:prepare": "npx cap add android && node scripts/android-landscape.js && npx capacitor-assets generate --android && npx cap sync android"
+    "android:prepare": "npx cap add android && node scripts/android-landscape.js && npx capacitor-assets generate --android --assetPath resources && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "6.1.2",
