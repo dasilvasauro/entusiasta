@@ -1,0 +1,40 @@
+{
+  "name": "entusiasta",
+  "version": "1.0.0",
+  "description": "Jogo de corrida com carros e pistas brasileiras, visual cell-shaded e carreira no estilo Gran Turismo.",
+  "author": { "name": "Entusiasta", "email": "contato@exemplo.com" },
+  "homepage": "https://github.com/",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "desktop": "electron .",
+    "deb": "electron-builder --linux deb --publish never",
+    "android:prepare": "npx cap add android && node scripts/android-landscape.js && npx capacitor-assets generate --android && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.1.2",
+    "@capacitor/core": "6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "6.1.2",
+    "electron": "30.5.1",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "br.com.entusiasta.jogo",
+    "productName": "Entusiasta",
+    "files": ["electron/**", "www/**", "package.json"],
+    "directories": { "output": "dist" },
+    "linux": {
+      "target": ["deb"],
+      "category": "Game",
+      "icon": "build/icon.png",
+      "synopsis": "Corrida com carros e pistas brasileiras",
+      "description": "Jogo de corrida com mais de 300 carros fictícios, pistas inspiradas em São Paulo e no Brasil, visual cell-shaded no estilo PS1, carreira com economia, kudos e Time Trial. Suporta teclado e controle.",
+      "maintainer": "Entusiasta <contato@exemplo.com>",
+      "desktop": { "Name": "Entusiasta", "Comment": "Corrida com carros e pistas brasileiras", "Keywords": "corrida;carros;jogo;racing;" }
+    },
+    "deb": { "depends": ["libgtk-3-0", "libnss3", "libxss1", "libasound2"] }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "appId": "br.com.entusiasta.jogo",
+  "appName": "Entusiasta",
+  "webDir": "www",
+  "android": { "backgroundColor": "#050505", "allowMixedContent": false }
+}
