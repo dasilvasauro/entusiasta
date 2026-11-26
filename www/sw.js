@@ -1,5 +1,5 @@
 // Service worker do Entusiasta: guarda o jogo para rodar offline depois da primeira visita.
-const CACHE = 'entusiasta-v11';
+const CACHE = 'entusiasta-v13';
 const CORE = ['./', './index.html', './three.min.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

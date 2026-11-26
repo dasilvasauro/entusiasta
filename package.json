@@ -1,6 +1,6 @@
 {
   "name": "entusiasta",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Jogo de corrida com carros e pistas brasileiras, visual cell-shaded e carreira no estilo Gran Turismo.",
   "author": { "name": "Entusiasta", "email": "contato@exemplo.com" },
   "homepage": "https://github.com/",
@@ -9,7 +9,7 @@
   "scripts": {
     "desktop": "electron .",
     "deb": "electron-builder --linux deb --publish never",
-    "android:prepare": "npx cap add android && node scripts/android-landscape.js && npx capacitor-assets generate --android && npx cap sync android"
+    "android:prepare": "npx cap add android && node scripts/android-landscape.js && npx capacitor-assets generate --android --assetPath resources && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "6.1.2",

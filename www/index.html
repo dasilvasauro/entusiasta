@@ -1356,7 +1356,7 @@ function ovalTrack(L, R, names) {
   return out;
 }
 
-function polyPath(corners, defR, step, startName) {
+function polyPath(corners, defR, step, startName, startAfter) {
   const n = corners.length, out = [], straights = [];
   const v = (a, b) => { const dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz); return [dx / l, dz / l, l]; };
   for (let i = 0; i < n; i++) {
@@ -1370,10 +1370,10 @@ function polyPath(corners, defR, step, startName) {
     const L = Math.hypot(e[0] - b[0], e[2] - b[2]), k = Math.max(1, Math.round(L / step));
     const st = out.length;
     for (let m = 1; m < k; m++) out.push([b[0] + (e[0] - b[0]) * m / k, b[1] + (e[1] - b[1]) * m / k, b[2] + (e[2] - b[2]) * m / k]);
-    straights.push([L, st + Math.floor((k - 1) / 2)]);
+    straights.push([L, st + Math.floor((k - 1) / 2), C[3]]);
   }
   straights.sort((a, b) => b[0] - a[0]);
-  const best = straights[0][1];
+  const pick = startAfter ? straights.find(x => x[2] === startAfter) : null, best = (pick || straights[0])[1];
   const rot = out.slice(best).concat(out.slice(0, best));
   rot[0][3] = startName;
   return rot;
@@ -1384,88 +1384,114 @@ const addT = d => { d.offGrip = d.offGrip || 0.62; T2.push(d); };
 // ---------- São Paulo, cidade (cada traçado nasce da geografia do lugar) ----------
 addT({ id: 'paulista', name: 'Circuito Avenida Paulista', short: 'Paulista', kind: 'city', urban: true, offGrip: 0.85, lvl: 3,
   region: 'Bela Vista e Jardins, São Paulo (SP)', desc: 'A Paulista no alto do espigão: um quilômetro de reta com a ciclovia vermelha ao lado, o vão livre do MASP e o Parque Trianon em frente. Depois, a descida forte da Brigadeiro, o zigue-zague das alamedas dos Jardins e a subida pela Consolação.',
+  road: { c: '#434448', center: 'double', cl: '#e0b830', wear: 0.3 }, walk: 'granito',
   points: polyPath([[0, 30, 0, 'Vão Livre do MASP', 30], [0, 30, 1100, 'Paraíso', 30], [-160, 26, 1180, 'Rua Vergueiro', 40], [-380, 8, 900, 'Descida da Brigadeiro', 35], [-420, -2, 520, 'Jardim Paulista', 24], [-300, -2, 420, 'Alameda Lorena', 22], [-420, -2, 260, 'Oscar Freire', 22], [-260, 10, 60, 'Subida da Consolação', 30], [-120, 26, -60, 'Trianon', 30]], 28, 50, 'Avenida Paulista'),
-  city: { hmix: [0, 1, 2, 3, 4, 6, 8, 6, 3], tint: [0xd8d4ca, 0x9aa4ae, 0x6f7a86, 0xbfc4c8, 0x8a8f96, 0xc9c3b8, 0x55606c], park: [[60, 560, 60]], lm: [['masp', 'Avenida Paulista', 34], ['antena', 'Paraíso', 50], ['antena', 'Trianon', 60]], tree: 'tipuana', bike: ['Avenida Paulista'] } });
+  city: { props: [['banca', 140, 'calcada'], ['orelhao', 90, 'calcada'], ['bicicletario', 120, 'calcada', ['Avenida Paulista']], ['pessoa', 14, 'calcada'], ['lixeira', 50, 'calcada'], ['ponto', 260, 'calcada'], ['floreira', 70, 'calcada', ['Avenida Paulista']]], hmix: [0, 1, 2, 3, 4, 6, 8, 6, 3], tint: [0xd8d4ca, 0x9aa4ae, 0x6f7a86, 0xbfc4c8, 0x8a8f96, 0xc9c3b8, 0x55606c], park: [[60, 560, 60]], lm: [['masp', 'Avenida Paulista', 34], ['antena', 'Paraíso', 50], ['antena', 'Trianon', 60]], tree: 'tipuana', bike: ['Avenida Paulista'] } });
 addT({ id: 'moema', name: 'Circuito Moema', short: 'Moema', kind: 'city', urban: true, offGrip: 0.85, lvl: 2,
   region: 'Moema, Zona Sul de São Paulo (SP)', desc: 'A Avenida Ibirapuera em curvas longas e rápidas, do obelisco até o shopping, seguida das alamedas arborizadas com nomes indígenas e de pássaros, em ângulos fechados entre torres residenciais.',
+  road: { c: '#57585c', patch: true, center: 'dash', wear: 0.4 }, walk: 'ladrilho',
   points: polyPath([[0, 0, 0, 'Obelisco', 50], [40, 0, 450, 'Avenida Ibirapuera', 170], [-20, 0, 900, 'Curva do Ibirapuera', 170], [30, 0, 1300, 'Shopping Ibirapuera', 35], [260, 0, 1340, 'Avenida Moaci', 22], [260, 0, 1100, 'Alameda dos Anapurus', 22], [420, 0, 1100, 'Alameda dos Arapanés', 22], [420, 0, 820, 'Alameda dos Maracatins', 22], [300, 0, 700, 'Alameda dos Jurupis', 22], [300, 0, 380, 'Alameda dos Nhambiquaras', 22], [200, 0, 160, 'Avenida dos Bandeirantes', 60]], 28, 50, 'Avenida Ibirapuera'),
-  city: { hmix: [1, 2, 2, 4, 6, 6, 4, 1, 0], tint: [0xe8e2d6, 0xd9b77a, 0xc98f6e, 0xb8b3aa, 0xe0d2b0, 0x9fb3bf], park: [[-150, 600, 140]], lm: [['obelisco', 'Obelisco', 60]], tree: 'ipe' } });
+  city: { bus: ['Avenida Ibirapuera', 'Curva do Ibirapuera'], props: [['ponto', 120, 'calcada', ['Avenida Ibirapuera', 'Curva do Ibirapuera'], -1], ['onibus', 260, 'lote', ['Avenida Ibirapuera', 'Shopping Ibirapuera']], ['carro', 22, 'lote', ['Alameda dos Anapurus', 'Alameda dos Arapanés', 'Alameda dos Maracatins', 'Alameda dos Jurupis', 'Alameda dos Nhambiquaras']], ['pessoa', 22, 'calcada'], ['floreira', 60, 'calcada'], ['banca', 300, 'calcada'], ['orelhao', 160, 'calcada']], hmix: [1, 2, 2, 4, 6, 6, 4, 1, 0], tint: [0xe8e2d6, 0xd9b77a, 0xc98f6e, 0xb8b3aa, 0xe0d2b0, 0x9fb3bf], park: [[-150, 600, 140]], lm: [['obelisco', 'Obelisco', 60]], tree: 'ipe' } });
 addT({ id: 'centro', name: 'Circuito Centro Histórico', short: 'Centro SP', kind: 'city', urban: true, offGrip: 0.85, lvl: 4,
   region: 'Centro, São Paulo (SP)', desc: 'Ruas estreitas e cheias de esquinas do centro velho: o Viaduto do Chá sobre o vale do Anhangabaú, o primeiro arranha-céu da cidade, o teatro com cúpula, a catedral de torres pontudas e a Praça da República.',
+  road: { c: '#4a4a4c', patch: true, center: 'none', wear: 0.45 }, walk: 'portugues',
   points: polyPath([[0, 0, 0, 'Largo São Bento', 20], [0, 0, 260, 'Viaduto do Chá', 20], [120, -2, 330, 'Theatro Municipal', 18], [220, 4, 240, 'Barão de Itapetininga', 18], [330, 6, 330, 'Praça da República', 20], [420, 4, 180, 'Avenida Ipiranga', 18], [300, 0, 40, 'Praça da Sé', 18], [340, -4, -120, 'Rua Direita', 18], [140, -4, -160, 'Pátio do Colégio', 18], [100, 0, -40, 'Rua XV de Novembro', 16]], 18, 40, 'Viaduto do Chá'),
-  city: { hmix: [0, 2, 5, 6, 4, 2, 1, 0, 0], tint: [0xcbb9a0, 0xb8aa98, 0xa8a49c, 0xd4c4a8, 0x9a8e7e, 0xc4b49a], lm: [['martinelli', 'Viaduto do Chá', 34], ['theatro', 'Theatro Municipal', 40], ['catedral', 'Praça da Sé', 46], ['casario', 'Rua Direita', 26]], tree: 'tipuana', viaduct: 'Viaduto do Chá' } });
+  city: { cobble: ['Largo São Bento', 'Pátio do Colégio', 'Rua XV de Novembro'], props: [['camelo', 26, 'calcada'], ['pessoa', 8, 'calcada'], ['orelhao', 70, 'calcada'], ['banca', 120, 'calcada'], ['lixeira', 40, 'calcada'], ['onibus', 300, 'lote', ['Avenida Ipiranga']]], hmix: [0, 2, 5, 6, 4, 2, 1, 0, 0], tint: [0xcbb9a0, 0xb8aa98, 0xa8a49c, 0xd4c4a8, 0x9a8e7e, 0xc4b49a], lm: [['martinelli', 'Viaduto do Chá', 34], ['theatro', 'Theatro Municipal', 40], ['catedral', 'Praça da Sé', 46], ['casario', 'Rua Direita', 26]], tree: 'tipuana', viaduct: 'Viaduto do Chá' } });
 addT({ id: 'santos', name: 'Circuito Orla de Santos', short: 'Santos', kind: 'city', urban: true, offGrip: 0.85, lvl: 3,
   region: 'Gonzaga e Ponta da Praia, Santos (SP)', desc: 'Um quilômetro e meio pela avenida da praia, ao lado do maior jardim de orla do mundo, até o porto com guindastes e navios. A volta entra pelos canais e corta o Gonzaga pela diagonal da Ana Costa.',
+  road: { c: '#4b4c50', center: 'dash', wear: 0.3 }, walk: 'portugues',
   points: polyPath([[0, 0, 0, 'José Menino', 30], [0, 0, 1600, 'Ponta da Praia', 50], [-150, 0, 1720, 'Porto', 30], [-420, 0, 1560, 'Canal 6', 25], [-420, 0, 1050, 'Canal 5', 25], [-250, 0, 900, 'Gonzaga', 25], [-560, 0, 500, 'Avenida Ana Costa', 30], [-300, 0, 120, 'Canal 2', 25]], 28, 50, 'Avenida da Praia'),
-  city: { hmix: [0, 1, 3, 6, 5, 3, 1, 0, 0], tint: [0xe8e2d6, 0xf0e6d0, 0x9fb3bf, 0xe6e0d0, 0xc98f6e, 0xb5c4c8], sea: { nx: 1, nz: 0, gap: 90 }, garden: ['Avenida da Praia'], canal: ['Canal 6', 'Canal 2'], lm: [['navio', 'Ponta da Praia', 160], ['guindaste', 'Porto', 70], ['guindaste', 'Ponta da Praia', 110], ['navio', 'José Menino', 220]], tree: 'palm' } });
+  city: { props: [['hotdog', 70, 'calcada', ['Avenida da Praia'], 'sea'], ['quiosque', 160, 'praia', ['Avenida da Praia'], 'sea'], ['guardasol', 16, 'praia', ['Avenida da Praia', 'José Menino'], 'sea'], ['salvavidas', 320, 'praia', ['Avenida da Praia'], 'sea'], ['pessoa', 12, 'calcada', ['Avenida da Praia']], ['banco', 40, 'calcada', ['Avenida da Praia'], 'sea'], ['bicicletario', 200, 'calcada'], ['carro', 30, 'lote', ['Gonzaga', 'Avenida Ana Costa', 'Canal 5'], 'land'], ['orelhao', 150, 'calcada']], hmix: [0, 1, 3, 6, 5, 3, 1, 0, 0], tint: [0xe8e2d6, 0xf0e6d0, 0x9fb3bf, 0xe6e0d0, 0xc98f6e, 0xb5c4c8], sea: { nx: 1, nz: 0, gap: 90 }, garden: ['Avenida da Praia'], canal: ['Canal 6', 'Canal 2'], lm: [['navio', 'Ponta da Praia', 160], ['guindaste', 'Porto', 70], ['guindaste', 'Ponta da Praia', 110], ['navio', 'José Menino', 220]], tree: 'palm' } });
 // ---------- litoral e outros estados ----------
 addT({ id: 'bc', name: 'Circuito Balneário Camboriú', short: 'Balneário Camboriú', kind: 'city', urban: true, offGrip: 0.85, lvl: 5,
   region: 'Balneário Camboriú (SC)', desc: 'Dois quilômetros de Avenida Atlântica entre os prédios mais altos do país, com a roda-gigante na Barra Norte e o retorno fechado no molhe da Barra Sul. A volta é pela Avenida Brasil, com uma chicane no meio.',
-  points: polyPath([[0, 0, 0, 'Barra Sul', 18], [0, 0, 2000, 'Barra Norte', 30], [-90, 2, 2070, 'Estrada da Rainha', 25], [-140, 4, 1900, 'Avenida Brasil', 22], [-140, 4, 1200, 'Rua 3100', 22], [-90, 2, 1100, 'Chicane da Central', 20], [-140, 4, 1000, 'Rua 2300', 20], [-140, 4, 150, 'Terceira Avenida', 25], [-70, 0, -60, 'Molhe da Barra Sul', 25]], 24, 55, 'Avenida Atlântica'),
-  city: { hmix: [0, 0, 1, 2, 3, 4, 5, 6, 6], tint: [0xe6e0d0, 0x9aa4ae, 0x6f7a86, 0xd0d4d8, 0x3a4a5a, 0xc9c3b8, 0x8fa3b5], sea: { nx: 1, nz: 0, gap: 70 }, beachTall: true, lm: [['roda', 'Barra Norte', 90], ['morro', 'Molhe da Barra Sul', 170]], tree: 'palm' } });
+  road: { c: '#36373b', center: 'solid', cl: '#f2f2ee', edge: '#e0b830', wear: 0.15 }, walk: 'granito',
+  points: polyPath([[0, 0, 0, 'Barra Sul', 18], [0, 0, 2000, 'Barra Norte', 30], [90, 2, 2070, 'Estrada da Rainha', 25], [140, 4, 1900, 'Avenida Brasil', 22], [140, 4, 1200, 'Rua 3100', 22], [90, 2, 1100, 'Chicane da Central', 20], [140, 4, 1000, 'Rua 2300', 20], [140, 4, 150, 'Terceira Avenida', 25], [70, 0, -60, 'Molhe da Barra Sul', 25]], 24, 55, 'Avenida Atlântica'),
+  city: { parked: ['Avenida Atlântica', 9], props: [['guardasol', 14, 'praia', ['Avenida Atlântica', 'Barra Norte'], 'sea'], ['quiosque', 180, 'praia', ['Avenida Atlântica'], 'sea'], ['salvavidas', 300, 'praia', ['Avenida Atlântica'], 'sea'], ['pessoa', 10, 'calcada', ['Avenida Atlântica']], ['floreira', 45, 'calcada', ['Avenida Atlântica'], 'land'], ['bicicletario', 220, 'calcada'], ['carro', 26, 'lote', ['Avenida Brasil', 'Terceira Avenida']]], hmix: [0, 0, 1, 2, 3, 4, 5, 6, 6], tint: [0xe6e0d0, 0x9aa4ae, 0x6f7a86, 0xd0d4d8, 0x3a4a5a, 0xc9c3b8, 0x8fa3b5], sea: { nx: -1, nz: 0, gap: 70 }, beachTall: true, lm: [['roda', 'Barra Norte', 90], ['morro', 'Molhe da Barra Sul', 170]], tree: 'palm' } });
 addT({ id: 'recife', name: 'Circuito Recife', short: 'Recife', kind: 'city', urban: true, offGrip: 0.85, lvl: 4,
   region: 'Boa Viagem e Recife Antigo (PE)', desc: 'A orla de Boa Viagem com coqueiros e torres, duas pontes sobre os rios, o Marco Zero e as ruas apertadas do Recife Antigo, e a curva longa à beira do Capibaribe pela Rua da Aurora.',
-  points: polyPath([[0, 0, 0, 'Boa Viagem', 30], [0, 0, 1100, 'Pina', 45], [-60, 0, 1300, 'Ponte do Pina', 60], [-200, 0, 1450, 'Recife Antigo', 20], [-320, 0, 1380, 'Marco Zero', 18], [-300, 0, 1240, 'Rua do Bom Jesus', 18], [-460, 0, 1160, 'Ponte Maurício de Nassau', 30], [-520, 0, 860, 'Rua da Aurora', 80], [-420, 0, 500, 'Avenida Agamenon', 60], [-300, 0, 180, 'Boa Vista', 30], [-140, 0, -80, 'Setúbal', 30]], 26, 50, 'Avenida Boa Viagem'),
-  city: { hmix: [1, 1, 2, 3, 4, 5, 5, 3, 0], tint: [0xe6e0d0, 0xf0d890, 0x9fd0c8, 0xe8a888, 0xb5c4c8, 0xd0e0e8], sea: { nx: 1, nz: 0, gap: 60 }, rivers: [[[220, 1270], [-130, 1190]], [[-720, 980], [-370, 1060]]], lm: [['casario', 'Recife Antigo', 26], ['casario', 'Rua do Bom Jesus', -26], ['igreja', 'Marco Zero', 40]], tree: 'palm', colorful: true } });
+  road: { c: '#4d4e52', patch: true, center: 'dash', wear: 0.35 }, walk: 'portugues',
+  points: polyPath([[0, 0, 0, 'Boa Viagem', 30], [0, 0, 1100, 'Pina', 45], [-60, 0, 1300, 'Ponte do Pina', 60], [-200, 0, 1450, 'Recife Antigo', 20], [-320, 0, 1380, 'Marco Zero', 18], [-300, 0, 1240, 'Rua do Bom Jesus', 18], [-460, 0, 1160, 'Ponte Maurício de Nassau', 30], [-520, 0, 860, 'Rua da Aurora', 80], [-420, 0, 500, 'Avenida Agamenon', 60], [-300, 0, 180, 'Boa Vista', 30], [-140, 0, -80, 'Setúbal', 30]], 26, 50, 'Cais da Rua da Aurora', 'Ponte Maurício de Nassau'),
+  city: { cobble: ['Recife Antigo', 'Marco Zero', 'Rua do Bom Jesus'], props: [['jangada', 60, 'praia', ['Avenida Boa Viagem', 'Pina'], 'sea'], ['guardasol', 18, 'praia', ['Avenida Boa Viagem'], 'sea'], ['quiosque', 200, 'praia', ['Avenida Boa Viagem'], 'sea'], ['pessoa', 12, 'calcada'], ['camelo', 50, 'calcada', ['Recife Antigo', 'Rua do Bom Jesus', 'Marco Zero']], ['orelhao', 120, 'calcada'], ['tenda', 140, 'lote', ['Marco Zero']]], hmix: [1, 1, 2, 3, 4, 5, 5, 3, 0], tint: [0xe6e0d0, 0xf0d890, 0x9fd0c8, 0xe8a888, 0xb5c4c8, 0xd0e0e8], sea: { nx: 1, nz: 0, gap: 60 }, rivers: [[[220, 1270], [-130, 1190]], [[-720, 980], [-370, 1060]]], lm: [['casario', 'Recife Antigo', 26], ['casario', 'Rua do Bom Jesus', -26], ['igreja', 'Marco Zero', 40]], tree: 'palm', colorful: true } });
 addT({ id: 'salvador', name: 'Circuito Salvador', short: 'Salvador', kind: 'city', urban: true, offGrip: 0.85, lvl: 5,
   region: 'Comércio, Pelourinho e Barra, Salvador (BA)', desc: 'A cidade de dois andares: a Cidade Baixa à beira da baía, os cotovelos da Ladeira da Montanha subindo 50 metros ao lado do Elevador Lacerda, as ruas de pedra do Pelourinho e a descida pela Avenida Sete até o Farol da Barra.',
-  points: polyPath([[0, 0, 0, 'Mercado Modelo', 30], [0, 0, 900, 'Comércio', 25], [-120, 16, 700, 'Ladeira da Montanha', 34], [-210, 18, 700, 'Primeiro Cotovelo', 34], [-210, 34, 980, 'Segundo Cotovelo', 34], [-300, 36, 980, 'Praça Tomé de Souza', 34], [-300, 50, 640, 'Pelourinho', 26], [-440, 52, 620, 'Largo do Pelourinho', 22], [-410, 54, 460, 'Terreiro de Jesus', 22], [-510, 56, 380, 'Igreja de São Francisco', 24], [-500, 42, 100, 'Avenida Sete', 40], [-260, 20, -120, 'Porto da Barra', 40], [-60, 4, -160, 'Farol da Barra', 40]], 20, 45, 'Avenida da França'),
-  city: { hmix: [3, 4, 3, 2, 2, 1, 0, 0, 0], tint: [0xf0d890, 0x9fd0c8, 0xe8a888, 0xc8e0a0, 0xf0b8c8, 0x88b8e0, 0xe6e0d0], sea: { nx: 1, nz: 0, gap: 55 }, lm: [['elevador', 'Praça Tomé de Souza', 45], ['farol', 'Farol da Barra', 70], ['igreja', 'Igreja de São Francisco', 36], ['casario', 'Largo do Pelourinho', 26], ['casario', 'Terreiro de Jesus', -26], ['bonfim', 'Mercado Modelo', 40]], tree: 'palm', colorful: true } });
+  road: { c: '#525357', patch: true, center: 'dash', wear: 0.35 }, walk: 'pedra',
+  points: polyPath([[0, 0, 0, 'Mercado Modelo', 30], [0, 0, 900, 'Comércio', 25], [-120, 16, 700, 'Ladeira da Montanha', 34], [-210, 18, 700, 'Primeiro Cotovelo', 34], [-210, 34, 980, 'Segundo Cotovelo', 34], [-300, 36, 980, 'Praça Tomé de Souza', 34], [-300, 50, 640, 'Pelourinho', 26], [-440, 52, 620, 'Largo do Pelourinho', 22], [-410, 54, 460, 'Terreiro de Jesus', 22], [-510, 56, 380, 'Igreja de São Francisco', 24], [-500, 42, 100, 'Avenida Sete', 40], [-260, 20, -120, 'Porto da Barra', 40], [-60, 4, -160, 'Farol da Barra', 40]], 20, 45, 'Rua Chile', 'Praça Tomé de Souza'),
+  city: { cobble: ['Largo do Pelourinho', 'Terreiro de Jesus', 'Pelourinho', 'Igreja de São Francisco'], props: [['acaraje', 70, 'calcada'], ['pessoa', 10, 'calcada'], ['guardasol', 18, 'praia', ['Porto da Barra', 'Farol da Barra', 'Mercado Modelo'], 'sea'], ['camelo', 60, 'calcada', ['Largo do Pelourinho', 'Terreiro de Jesus', 'Mercado Modelo']], ['bandeiras', 50, 'calcada', ['Largo do Pelourinho', 'Terreiro de Jesus']], ['orelhao', 140, 'calcada']], hmix: [3, 4, 3, 2, 2, 1, 0, 0, 0], tint: [0xf0d890, 0x9fd0c8, 0xe8a888, 0xc8e0a0, 0xf0b8c8, 0x88b8e0, 0xe6e0d0], sea: { nx: 1, nz: 0, gap: 55 }, lm: [['elevador', 'Praça Tomé de Souza', 45], ['farol', 'Farol da Barra', 70], ['igreja', 'Igreja de São Francisco', 36], ['casario', 'Largo do Pelourinho', 26], ['casario', 'Terreiro de Jesus', -26], ['bonfim', 'Mercado Modelo', 40]], tree: 'palm', colorful: true } });
 addT({ id: 'chapeco', name: 'Circuito Chapecó', short: 'Chapecó', kind: 'city', urban: true, offGrip: 0.85, lvl: 3,
   region: 'Centro e arredores, Chapecó (SC)', desc: 'Manhãs de geada no oeste catarinense: a Avenida Getúlio Vargas com a catedral e o monumento ao colono, o estádio, e a saída para as estradas onduladas entre silos e lavouras cobertas de branco.',
+  road: { c: '#48484c', center: 'double', cl: '#e0b830', wear: 0.3 }, walk: 'tijolo',
   points: polyPath([[0, 0, 0, 'Ecoparque', 35], [0, 6, 1000, 'Catedral', 30], [150, 10, 1150, 'Desbravador', 45], [420, 16, 1100, 'Arena Condá', 60], [620, 8, 850, 'Agroindústria', 90], [560, 0, 500, 'Silos', 90], [700, -4, 250, 'Lavouras', 70], [520, 0, -50, 'Rua Clevelândia', 30], [250, 2, -150, 'São Cristóvão', 30]], 30, 55, 'Avenida Getúlio Vargas'),
-  city: { hmix: [2, 3, 3, 3, 3, 2, 1, 0, 0], tint: [0xe8e2d6, 0xd6cfc2, 0xb8b3aa, 0xc98f6e, 0xd9b77a, 0x9fb3bf], frost: true, ruralFrom: 'Agroindústria', ruralTo: 'Rua Clevelândia', lm: [['desbravador', 'Catedral', -22], ['igreja', 'Catedral', 36], ['arena', 'Arena Condá', 70], ['silos', 'Silos', 70]], tree: 'ipe' } });
+  city: { props: [['vaca', 30, 'longe', ['Agroindústria', 'Silos', 'Lavouras']], ['feno', 26, 'longe', ['Silos', 'Lavouras']], ['caixadagua', 220, 'longe', ['Agroindústria', 'Lavouras']], ['poste', 40, 'beira', ['Agroindústria', 'Silos', 'Lavouras']], ['caminhaoCana', 300, 'lote', ['Agroindústria']], ['pessoa', 22, 'calcada', ['Avenida Getúlio Vargas', 'Catedral', 'Desbravador']], ['banca', 200, 'calcada', ['Avenida Getúlio Vargas']], ['floreira', 50, 'calcada', ['Avenida Getúlio Vargas']]], hmix: [2, 3, 3, 3, 3, 2, 1, 0, 0], tint: [0xe8e2d6, 0xd6cfc2, 0xb8b3aa, 0xc98f6e, 0xd9b77a, 0x9fb3bf], frost: true, ruralFrom: 'Agroindústria', ruralTo: 'Rua Clevelândia', lm: [['desbravador', 'Catedral', -22], ['igreja', 'Catedral', 36], ['arena', 'Arena Condá', 70], ['silos', 'Silos', 70]], tree: 'ipe' } });
 addT({ id: 'brasilia', name: 'Circuito Eixo Monumental', short: 'Brasília', kind: 'city', urban: true, offGrip: 0.85, lvl: 6,
   region: 'Eixo Monumental, Brasília (DF)', desc: 'Um quilômetro e meio de Eixo Monumental entre gramados, com balões enormes nas pontas, a curva em volta da Praça dos Três Poderes, a catedral de colunas curvas e os prédios sobre pilotis.',
+  road: { c: '#8a8a86', slabs: true, center: 'solid', cl: '#f2f2ee', edge: '#f2f2ee', wear: 0.15, noise: 18 }, walk: 'concreto',
   points: polyPath([[0, 0, 0, 'Rodoviária', 120], [0, 0, 1600, 'Esplanada', 120], [-320, 0, 1700, 'Praça dos Três Poderes', 120], [-380, 0, 1300, 'Congresso', 40], [-260, 0, 1100, 'Catedral', 40], [-380, 0, 800, 'Ministérios', 40], [-360, 0, 200, 'Torre de TV', 120]], 40, 60, 'Eixo Monumental'),
-  city: { hmix: [1, 6, 2, 1, 0, 0, 0, 0, 0], tint: [0xe8e8e4, 0xd8d8d4, 0xc8ccd0, 0xb8bcc2], sparse: true, lm: [['congresso', 'Congresso', 90], ['catedralbsb', 'Catedral', 70], ['antena', 'Torre de TV', 70]], tree: 'cerrado' } });
+  city: { props: [['ponto', 160, 'calcada'], ['onibus', 320, 'lote'], ['pessoa', 30, 'calcada'], ['bandeiras', 40, 'lote', ['Esplanada', 'Praça dos Três Poderes']], ['carro', 40, 'lote', ['Ministérios', 'Torre de TV']]], hmix: [1, 6, 2, 1, 0, 0, 0, 0, 0], tint: [0xe8e8e4, 0xd8d8d4, 0xc8ccd0, 0xb8bcc2], sparse: true, lm: [['congresso', 'Congresso', 90], ['catedralbsb', 'Catedral', 70], ['antena', 'Torre de TV', 70]], tree: 'cerrado' } });
 // ---------- natureza, serra e interior ----------
 addT({ id: 'ilhabela', name: 'Estrada de Ilhabela', short: 'Ilhabela', kind: 'themed', lvl: 4,
   region: 'Ilhabela, litoral norte (SP)', desc: 'A estrada costeira do canal de São Sebastião, entre o mar e a serra coberta de Mata Atlântica, passando pela Vila de casario colonial, pela igreja matriz e pelo píer da balsa.',
+  road: { c: '#55565a', patch: true, center: 'dash', cl: '#e0b830', wear: 0.35 },
   points: polarTrack({ seed: 11, R: 620, sx: 0.55, sz: 1.25, n: 34, elev: 17, h: [[2, 0.1], [3, 0.12], [5, 0.06], [7, 0.03]], names: ['Píer da Vila', 'Rua do Meio', 'Praia do Perequê', 'Mirante do Canal', 'Serra', 'Cachoeira', 'Praia do Curral', 'Balsa'] }),
-  theme: { ground: [0.24, 0.36, 0.2], hills: 80, sea: { nx: -1, nz: 0, gap: 45 }, veg: { dens: 0.65, dist: 380, kinds: { nat: 7, palm: 1, ipe: 1 } }, lm: [['igreja', 0.02, 1, 40], ['casario', 0.06, 1, 30], ['navio', 0.95, -1, 120], ['casario', 0.1, 1, 34]], wall: 'rail' } });
+  theme: { vila: { from: 0.0, to: 0.09 }, bike: true, props: [['pessoa', 20, 'beira', null, 'land'], ['guardasol', 20, 'praia', null, 'sea'], ['quiosque', 260, 'praia', null, 'sea'], ['poste', 45, 'beira', null, 'land'], ['banco', 90, 'beira', null, 'sea']], ground: [0.24, 0.36, 0.2], hills: 80, sea: { nx: -1, nz: 0, gap: 45 }, veg: { dens: 0.65, dist: 380, kinds: { nat: 7, palm: 1, ipe: 1 } }, lm: [['igreja', 0.02, 1, 40], ['casario', 0.06, 1, 30], ['navio', 0.95, -1, 120], ['casario', 0.1, 1, 34]], wall: 'rail' } });
 addT({ id: 'campos', name: 'Serra de Campos do Jordão', short: 'Campos do Jordão', kind: 'themed', lvl: 5,
   region: 'Campos do Jordão, Serra da Mantiqueira (SP)', desc: 'Estrada de serra a 1.600 metros, entre araucárias e chalés de estilo alpino, com o vale de Capivari e neblina frequente.',
+  road: { c: '#47484c', center: 'double', cl: '#e0b830', wear: 0.3 },
   points: polarTrack({ seed: 23, R: 700, n: 36, elev: 32, h: [[2, 0.14], [3, 0.1], [4, 0.07], [7, 0.04]], names: ['Capivari', 'Vila Inglesa', 'Pico do Itapeva', 'Araucárias', 'Horto', 'Descida do Abernéssia'] }),
-  theme: { ground: [0.3, 0.4, 0.24], hills: 110, veg: { dens: 0.26, dist: 360, kinds: { arauc: 6, nat: 3, euc: 1 } }, houses: { style: 'chale', n: 26 }, lakes: [{ fx: 0, fz: 0, r: 90 }], lm: [['chales', 0.03, 1, 32], ['chales', 0.5, -1, 34], ['teleferico', 0.25, 1, 60]], wall: 'rail', fog: true } });
-addT({ id: 'serramar', name: 'Descida da Serra do Mar', short: 'Serra do Mar', kind: 'themed', lvl: 6,
-  region: 'Serra do Mar, entre o planalto e a Baixada Santista (SP)', desc: 'A descida antiga em cotovelos fechados, um atrás do outro, com o mar lá embaixo e precipício do lado. A subida de volta é pela pista moderna, com um túnel longo e escuro e viaduto sobre a mata.',
-  points: polyPath([[0, 60, 0, 'Planalto', 40], [0, 60, 300, 'Mirante do Mar', 40], [-400, 46, 420, 'Cotovelo 1', 18], [-400, 44, 470, 'Cotovelo 2', 18], [0, 30, 560, 'Cotovelo 3', 18], [0, 28, 610, 'Cotovelo 4', 18], [-400, 14, 700, 'Cotovelo 5', 18], [-400, 12, 750, 'Cotovelo 6', 18], [0, -4, 840, 'Cotovelo 7', 18], [0, -6, 890, 'Cotovelo 8', 18], [-400, -20, 980, 'Curva da Onça', 30], [-600, -20, 900, 'Baixada', 60], [-650, 20, 300, 'Túnel', 60], [-500, 50, -120, 'Viaduto', 60]], 30, 50, 'Planalto'),
-  theme: { ground: [0.22, 0.34, 0.19], hills: 120, sea: { nx: 0, nz: 1, gap: 150, deep: 130 }, veg: { dens: 0.75, dist: 380, kinds: { nat: 9, palm: 1 } }, tunnel: ['Túnel', 0.62], lm: [], wall: 'rail', fog: true } });
+  theme: { props: [['pessoa', 40, 'beira', ['Capivari', 'Vila Inglesa']], ['poste', 50, 'beira'], ['floreira', 60, 'beira', ['Capivari']], ['tenda', 160, 'beira', ['Capivari']]], ground: [0.3, 0.4, 0.24], hills: 110, veg: { dens: 0.26, dist: 360, kinds: { arauc: 6, nat: 3, euc: 1 } }, houses: { style: 'chale', n: 26 }, lakes: [{ fx: 0, fz: 0, r: 90 }], lm: [['chales', 0.03, 1, 32], ['chales', 0.5, -1, 34], ['teleferico', 0.25, 1, 60]], wall: 'rail', fog: true } });
+addT({ id: 'serramar', name: 'Descida da Serra do Mar', short: 'Serra do Mar', kind: 'themed', lvl: 6, road: { c: '#77777a', slabs: true, center: 'dash', cl: '#f2f2ee', wear: 0.2 },
+  region: 'Serra do Mar, entre o planalto e a Baixada Santista (SP)', desc: 'A descida antiga em oito cotovelos fechados, com precipício de um lado e o mar lá embaixo. A volta sobe por um cânion sinuoso de paredões cobertos de Mata Atlântica e atravessa a serra por um túnel curvo e escuro.',
+  points: polyPath([[0, 60, 0, 'Planalto', 40], [0, 60, 300, 'Mirante do Mar', 40], [-400, 46, 420, 'Cotovelo 1', 18], [-400, 44, 470, 'Cotovelo 2', 18], [0, 30, 560, 'Cotovelo 3', 18], [0, 28, 610, 'Cotovelo 4', 18], [-400, 14, 700, 'Cotovelo 5', 18], [-400, 12, 750, 'Cotovelo 6', 18], [0, -4, 840, 'Cotovelo 7', 18], [0, -6, 890, 'Cotovelo 8', 18], [-400, -20, 980, 'Curva da Onça', 30],
+    [-620, -20, 940, 'Baixada', 50], [-760, -12, 780, 'Cânion', 60], [-640, -2, 640, 'Garganta', 55], [-780, 8, 500, 'Túnel', 60], [-700, 22, 300, 'Curva no Túnel', 60], [-820, 34, 120, 'Paredão', 55], [-640, 46, -80, 'Viaduto', 60], [-300, 56, -150, 'Alto da Serra', 50]], 30, 45, 'Planalto'),
+  theme: { ground: [0.22, 0.34, 0.19], hills: 120, sea: { nx: 0, nz: 1, gap: 150, deep: 130 }, veg: { dens: 0.9, dist: 380, near: WALL + 3.5, kinds: { nat: 9, palm: 1, euc: 1 } }, canyon: ['Baixada', 'Alto da Serra'], tunnel: ['Túnel', 0.62], lm: [], wall: 'rail', fog: true,
+    props: [['cone', 60, 'beira', ['Cotovelo 3', 'Cotovelo 7']], ['caminhaoCana', 400, 'longe', ['Planalto']]] } });
 addT({ id: 'holambra', name: 'Campos de Holambra', short: 'Holambra', kind: 'themed', lvl: 2,
   region: 'Holambra, interior paulista (SP)', desc: 'Estradas rurais em ângulo entre campos de flores em faixas coloridas, estufas e o moinho de estilo holandês da cidade das flores.',
+  road: { c: '#5a5b5f', center: 'dash', wear: 0.3 },
   points: polyPath([[0, 0, 0, 'Moinho', 45], [0, 0, 700, 'Cooperativa', 45], [400, 2, 700, 'Campo de Tulipas', 45], [400, 2, 400, 'Estufas', 45], [700, 4, 400, 'Lagoa', 45], [700, 0, -200, 'Expoflora', 45], [250, 0, -200, 'Alameda das Flores', 45], [250, 0, 150, 'Ponte Holandesa', 45]], 45, 60, 'Estrada do Moinho'),
-  theme: { ground: [0.4, 0.52, 0.28], hills: 18, crops: 'flores', veg: { dens: 0.15, dist: 300, kinds: { nat: 4, euc: 3, ipe: 1 } }, lakes: [{ fx: 0.15, fz: 0.1, r: 60 }], lm: [['moinho', 0.0, 1, 40], ['estufas', 0.3, -1, 80], ['estufas', 0.65, 1, 90]], wall: 'rail' } });
+  theme: { props: [['bicicletario', 140, 'beira'], ['tenda', 180, 'beira', ['Cooperativa', 'Expoflora']], ['vaca', 40, 'longe', ['Lagoa', 'Alameda das Flores']], ['poste', 45, 'beira'], ['caixadagua', 260, 'longe'], ['pessoa', 30, 'beira', ['Cooperativa', 'Expoflora', 'Moinho']]], ground: [0.4, 0.52, 0.28], hills: 18, crops: 'flores', veg: { dens: 0.15, dist: 300, kinds: { nat: 4, euc: 3, ipe: 1 } }, lakes: [{ fx: 0.15, fz: 0.1, r: 60 }], lm: [['moinho', 0.0, 1, 40], ['estufas', 0.3, -1, 80], ['estufas', 0.65, 1, 90]], wall: 'rail' } });
 addT({ id: 'ribeirao', name: 'Canaviais de Ribeirão Preto', short: 'Ribeirão Preto', kind: 'themed', lvl: 3,
   region: 'Ribeirão Preto, interior paulista (SP)', desc: 'Um triângulo de retas enormes entre canaviais a perder de vista, com a usina e os silos no horizonte, uma chicane na estrada da fazenda e terra roxa nas margens.',
+  road: { c: '#4e4a46', patch: true, center: 'double', cl: '#e0b830', wear: 0.4 },
   points: polyPath([[0, 0, 0, 'Usina', 80], [0, 4, 1800, 'Anhanguera', 70], [-1100, 8, 900, 'Canavial', 70], [-560, 4, 420, 'Chicane da Fazenda', 50]], 70, 70, 'Retão da Usina'),
-  theme: { ground: [0.46, 0.5, 0.28], hills: 20, crops: 'cana', veg: { dens: 0.08, dist: 320, kinds: { nat: 5, euc: 5 } }, lm: [['usina', 0.02, -1, 60], ['silos', 0.5, 1, 50]], wall: 'rail' } });
+  theme: { props: [['caminhaoCana', 160, 'lote'], ['poste', 42, 'beira'], ['caixadagua', 300, 'longe'], ['vaca', 60, 'longe', ['Chicane da Fazenda']], ['feno', 40, 'longe', ['Chicane da Fazenda']]], ground: [0.46, 0.5, 0.28], hills: 20, crops: 'cana', veg: { dens: 0.08, dist: 320, kinds: { nat: 5, euc: 5 } }, lm: [['usina', 0.02, -1, 60], ['silos', 0.5, 1, 50]], wall: 'rail' } });
 addT({ id: 'japi', name: 'Serra do Japi', short: 'Serra do Japi', kind: 'themed', lvl: 4,
   region: 'Jundiaí, interior paulista (SP)', desc: 'Estrada entre vinhedos da região da uva e a mata da Serra do Japi, com adegas de pedra e subidas curtas.',
+  road: { c: '#505055', center: 'dash', cl: '#e0b830', wear: 0.3 },
   points: polarTrack({ seed: 67, R: 600, n: 34, elev: 24, h: [[2, 0.12], [3, 0.12], [5, 0.07], [6, 0.03]], names: ['Adega', 'Vinhedo', 'Mirante', 'Mata', 'Colônia Italiana'] }),
-  theme: { ground: [0.36, 0.46, 0.25], hills: 70, crops: 'vinha', veg: { dens: 0.34, dist: 360, kinds: { nat: 6, euc: 2, ipe: 1 } }, houses: { style: 'fazenda', n: 10 }, lm: [], wall: 'rail' } });
+  theme: { props: [['tenda', 140, 'beira', ['Adega', 'Colônia Italiana']], ['poste', 46, 'beira'], ['caixadagua', 300, 'longe'], ['pessoa', 40, 'beira', ['Adega', 'Colônia Italiana']], ['vaca', 50, 'longe', ['Mata']]], ground: [0.36, 0.46, 0.25], hills: 70, crops: 'vinha', veg: { dens: 0.34, dist: 360, kinds: { nat: 6, euc: 2, ipe: 1 } }, houses: { style: 'fazenda', n: 10 }, lm: [], wall: 'rail' } });
 addT({ id: 'mantiqueira', name: 'Anel da Mantiqueira', short: 'Mantiqueira', kind: 'themed', lvl: 7,
   region: 'Serra da Mantiqueira, divisa de SP e MG', desc: 'O traçado mais longo do jogo, com mais de 12 km de curvas, subidas e descidas entre mata, campos de altitude, araucárias e vilas de serra. Exige memória e paciência.',
+  road: { c: '#3e3f43', center: 'dash', wear: 0.3 },
   points: polarTrack({ seed: 79, R: 1750, sx: 1.15, sz: 0.85, n: 110, elev: 70, h: [[2, 0.08], [3, 0.07], [5, 0.05], [7, 0.04], [11, 0.025], [17, 0.012]], names: ['Largada', 'Vila do Rosário', 'Bosque das Araucárias', 'Subida do Pico', 'Campos de Altitude', 'Descida da Garganta', 'Ponte do Rio Verde', 'Curva do Sino', 'Vila Alpina', 'Retão da Várzea', 'Mergulho', 'Chegada'] }),
-  theme: { ground: [0.28, 0.4, 0.22], hills: 120, veg: { dens: 0.3, dist: 240, kinds: { nat: 6, arauc: 3, euc: 1 } }, houses: { style: 'chale', n: 40 }, lm: [['igreja', 0.08, 1, 40], ['chales', 0.66, -1, 34]], wall: 'rail', big: true } });
+  theme: { props: [['vaca', 50, 'longe', ['Campos de Altitude', 'Retão da Várzea']], ['feno', 40, 'longe', ['Retão da Várzea']], ['poste', 50, 'beira', ['Vila do Rosário', 'Vila Alpina']], ['pessoa', 26, 'beira', ['Vila do Rosário', 'Vila Alpina']], ['tenda', 200, 'beira', ['Largada', 'Chegada']], ['bandeiras', 60, 'beira', ['Largada', 'Chegada']]], ground: [0.28, 0.4, 0.22], hills: 120, veg: { dens: 0.3, dist: 240, kinds: { nat: 6, arauc: 3, euc: 1 } }, houses: { style: 'chale', n: 40 }, lm: [['igreja', 0.08, 1, 40], ['chales', 0.66, -1, 34]], wall: 'rail', big: true } });
 // ---------- autódromos ----------
 addT({ id: 'guarapiranga', name: 'Autódromo Guarapiranga', short: 'Guarapiranga', kind: 'themed', lvl: 3, pits: true,
   region: 'Represa de Guarapiranga, Zona Sul de São Paulo (SP)', desc: 'Autódromo à beira da represa, com veleiros na água, uma descida forte depois dos boxes e um miolo travado. Tem boxes para provas longas.',
+  road: { c: '#3c3d41', center: 'none', edge: '#f2f2ee', wear: 0.35 },
   points: polarTrack({ seed: 89, R: 520, sx: 1.25, sz: 0.85, n: 32, elev: 22, h: [[2, 0.1], [3, 0.14], [4, 0.06], [6, 0.04]], names: ['Reta dos Boxes', 'S da Represa', 'Descida do Lago', 'Ferradura', 'Miolo', 'Subida dos Boxes'] }),
-  theme: { ground: [0.36, 0.5, 0.27], hills: 30, lakes: [{ fx: 0, fz: 0.75, r: 150, boats: true }], veg: { dens: 0.2, dist: 320, kinds: { nat: 5, euc: 3 } }, stands: true, lm: [], wall: 'tires' } });
+  theme: { props: [['tenda', 60, 'lote', ['Reta dos Boxes']], ['bandeiras', 40, 'beira'], ['pessoa', 10, 'lote', ['Reta dos Boxes', 'S da Represa']], ['carro', 18, 'longe', ['Miolo']]], ground: [0.36, 0.5, 0.27], hills: 30, lakes: [{ fx: 0, fz: 0.75, r: 150, boats: true }], veg: { dens: 0.2, dist: 320, kinds: { nat: 5, euc: 3 } }, stands: true, lm: [], wall: 'tires' } });
 addT({ id: 'cerrado', name: 'Autódromo do Cerrado', short: 'Cerrado', kind: 'themed', lvl: 5, pits: true,
   region: 'Planalto Central, Goiás', desc: 'Autódromo plano e veloz no cerrado, com terra vermelha, árvores retorcidas e retas longas que favorecem o vácuo. Tem boxes para provas longas.',
+  road: { c: '#433e3a', center: 'none', edge: '#f2f2ee', wear: 0.35 },
   points: polarTrack({ seed: 97, R: 640, sx: 1.4, sz: 0.75, n: 30, elev: 6, h: [[2, 0.1], [3, 0.08], [5, 0.05]], names: ['Reta dos Boxes', 'Curva do Ipê-Amarelo', 'Retão do Cerrado', 'Curva da Vereda', 'Junção'] }),
-  theme: { ground: [0.5, 0.44, 0.26], ground2: [0.58, 0.32, 0.2], hills: 12, veg: { dens: 0.12, dist: 340, kinds: { cerrado: 8, ipe: 1 } }, stands: true, lm: [], wall: 'tires' } });
+  theme: { props: [['tenda', 60, 'lote', ['Reta dos Boxes']], ['bandeiras', 50, 'beira'], ['vaca', 40, 'longe', ['Retão do Cerrado', 'Curva da Vereda']], ['poste', 50, 'longe'], ['pessoa', 12, 'lote', ['Reta dos Boxes']]], ground: [0.5, 0.44, 0.26], ground2: [0.58, 0.32, 0.2], hills: 12, veg: { dens: 0.12, dist: 340, kinds: { cerrado: 8, ipe: 1 } }, stands: true, lm: [], wall: 'tires' } });
 addT({ id: 'piracicaba', name: 'Oval de Piracicaba', short: 'Oval Piracicaba', kind: 'themed', lvl: 4, pits: true,
   region: 'Piracicaba, interior paulista (SP)', desc: 'Oval de alta velocidade com curvas inclinadas e arquibancadas em volta. O vácuo decide a corrida. Tem boxes para provas longas.',
+  road: { c: '#3a3b3f', center: 'none', edge: '#f2f2ee', wear: 0.2 },
   points: ovalTrack(620, 150, ['Reta dos Boxes', 'Curva 1 e 2', 'Reta Oposta', 'Curva 3 e 4']),
-  theme: { ground: [0.38, 0.52, 0.28], hills: 6, veg: { dens: 0.05, dist: 300, kinds: { nat: 5, euc: 3 } }, stands: true, oval: true, lm: [], wall: 'concrete' } });
+  theme: { props: [['tenda', 50, 'lote'], ['bandeiras', 30, 'beira'], ['pessoa', 8, 'lote'], ['carro', 14, 'longe']], ground: [0.38, 0.52, 0.28], hills: 6, veg: { dens: 0.05, dist: 300, kinds: { nat: 5, euc: 3 } }, stands: true, oval: true, lm: [], wall: 'concrete' } });
 addT({ id: 'interlagos', name: 'Autódromo de Interlagos', short: 'Interlagos', kind: 'themed', lvl: 4, pits: true,
   region: 'Interlagos, Zona Sul de São Paulo (SP)', desc: 'O autódromo da Zona Sul no sentido anti-horário: o S do Senna em descida logo após a largada, a Curva do Sol, a Reta Oposta, o miolo travado com Ferradura, Pinheirinho e Bico de Pato, o Mergulho e a longa Subida dos Boxes. Zebras verde e amarelas.',
+  road: { c: '#3d3e42', center: 'none', edge: '#f2f2ee', wear: 0.4 },
   points: (() => { const P = [[500, 20, 420, 'Reta dos Boxes'], [300, 19, 425], [150, 18, 430], [60, 13, 405, 'S do Senna'], [30, 8, 340], [-10, 3, 270], [-30, 0, 160, 'Curva do Sol'], [5, -2, 60], [120, -4, -10, 'Reta Oposta'], [300, -6, -50], [450, -8, -85], [560, -10, -110, 'Descida do Lago'], [615, -10, -55], [605, -8, 25], [545, -5, 95, 'Ferradura'], [460, -2, 150], [385, 1, 145], [330, 4, 195, 'Laranjinha'], [255, 6, 205], [215, 6, 150, 'Pinheirinho'], [180, 4, 92], [96, 4, 120, 'Bico de Pato'], [118, 6, 216], [215, 8, 260, 'Mergulho'], [300, 6, 300, 'Junção'], [410, 12, 330, 'Subida dos Boxes'], [560, 17, 360], [650, 19, 395, 'Arquibancadas'], [620, 20, 420]]; return P.map(p => [p[0] * 1.42, p[1] * 1.2, p[2] * 1.42, p[3]]); })(),
-  theme: { ground: [0.36, 0.5, 0.27], hills: 25, lakes: [{ fx: 0.18, fz: -0.2, r: 34 }], veg: { dens: 0.3, dist: 320, kinds: { nat: 6, euc: 3 } }, stands: true, curb: [0x1f8a3a, 0xe0c020], lm: [], wall: 'tires', city: true } });
+  theme: { props: [['tenda', 50, 'lote', ['Reta dos Boxes', 'Arquibancadas']], ['bandeiras', 30, 'beira'], ['pessoa', 8, 'lote', ['Reta dos Boxes', 'S do Senna', 'Arquibancadas', 'Junção']], ['carro', 16, 'longe', ['Laranjinha', 'Pinheirinho']], ['onibus', 120, 'longe', ['Ferradura']]], ground: [0.36, 0.5, 0.27], hills: 25, lakes: [{ fx: 0.18, fz: -0.2, r: 34 }], veg: { dens: 0.3, dist: 320, kinds: { nat: 6, euc: 3 } }, stands: true, curb: [0x1f8a3a, 0xe0c020], lm: [], wall: 'tires', city: true } });
 TRACKS.push(...T2);
+TRACK_VILA.city = { props: [['banca', 150, 'calcada'], ['orelhao', 100, 'calcada'], ['pessoa', 16, 'calcada'], ['ponto', 220, 'calcada'], ['lixeira', 60, 'calcada'], ['carro', 26, 'lote']] };
+TRACK_VILA.road = { c: '#4e4f55', center: 'dash' }; TRACK_VILA.walk = 'ladrilho';
+TRACK_TERRA.props = [['vaca', 40, 'longe'], ['feno', 50, 'longe'], ['poste', 46, 'beira'], ['caixadagua', 300, 'longe'], ['pessoa', 60, 'beira']];
+TRACK_GRU.props = [['ponto', 260, 'beira'], ['carro', 30, 'longe'], ['onibus', 220, 'longe'], ['poste', 60, 'beira'], ['pessoa', 50, 'beira']];
+TRACK_VALE.props = [['tenda', 60, 'lote'], ['bandeiras', 40, 'beira'], ['pessoa', 10, 'lote'], ['carro', 18, 'longe']];
 TRACKS.forEach(t => { if (t.lvl === undefined) t.lvl = 1; });
 // =================== CATÁLOGO: MARCAS, CORES E CARROS ===================
 // País: pools de nomes de cor, modelos e engenheiros
@@ -2491,7 +2517,7 @@ function buildWorld(T, def) {
 function buildCity(T, def) {
   const W = { group: new THREE.Group(), chunks: [], urban: true };
   CHUNK_LIST = W.chunks; scene.add(W.group);
-  const N = T.N, rng = mulberry32(1554);
+  const N = T.N, rng = mulberry32(seedOf(def.id + 'cidade'));
   let bx0 = 1e9, bx1 = -1e9, bz0 = 1e9, bz1 = -1e9;
   for (let i = 0; i < N; i++) { bx0 = Math.min(bx0, T.px[i]); bx1 = Math.max(bx1, T.px[i]); bz0 = Math.min(bz0, T.pz[i]); bz1 = Math.max(bz1, T.pz[i]); }
   const CX = (bx0 + bx1) / 2, CZ = (bz0 + bz1) / 2; W.center = { x: CX, z: CZ };
@@ -2510,7 +2536,11 @@ function buildCity(T, def) {
   const viaR = CC.viaduct ? secRange(CC.viaduct, 200) : null, rurR = CC.ruralFrom ? [secRange(CC.ruralFrom)[0], secRange(CC.ruralTo)[0]] : null;
   const rivers = (CC.rivers || []).map(r => ({ a: r[0], b: r[1], w: 48 }));
   const riverD = (x, z) => { let m = 1e9; for (const r of rivers) { const dx = r.b[0] - r.a[0], dz = r.b[1] - r.a[1], L2 = dx * dx + dz * dz, t = clamp(((x - r.a[0]) * dx + (z - r.a[1]) * dz) / L2, 0, 1); m = Math.min(m, Math.hypot(x - r.a[0] - dx * t, z - r.a[1] - dz * t) - r.w / 2); } return m; };
-  const groundH = (x, z) => { const q = nearest(x, z); let h = surfY(T, q.i, q.lat) - 0.35;
+  let yMax = -1e9; for (let i = 0; i < N; i++) yMax = Math.max(yMax, T.py[i]);
+  const hilly = yMax - ymin > 3, legGap = Math.round(70 / T.ds);
+  const lowLeg = (x, z, qi, h) => { if (!hilly) return h; const r2 = (WALL + 30) ** 2; for (let i = 0; i < N; i += 3) { let di = Math.abs(i - qi); di = Math.min(di, N - di); if (di < legGap) continue; const dx = x - T.px[i], dz = z - T.pz[i]; if (dx * dx + dz * dz < r2) h = Math.min(h, T.py[i] - 0.8); } return h; };
+  const localMin = (x, z, qi, h) => { const R = Math.round(45 / T.ds), r2 = (WALL + 3) ** 2; for (let k = -R; k <= R; k += 2) { const i = (qi + k + N) % N, dx = x - T.px[i], dz = z - T.pz[i]; if (dx * dx + dz * dz < r2) h = Math.min(h, T.py[i] - 0.4); } return h; };
+  const groundH = (x, z) => { const q = nearest(x, z); let h = surfY(T, q.i, q.lat) - 0.35; if (hilly && q.d < WALL + 4) h = localMin(x, z, q.i, h); if (q.d > WALL + 2) h = lowLeg(x, z, q.i, h);
     if (viaR && inRange(q.i, viaR) && q.d > WALL + 1) h -= 14 * smoothstep(WALL + 1, WALL + 8, q.d) * (1 - smoothstep(70, 150, q.d));
     if (rivers.length && q.d > WALL + 1) { const rd = riverD(x, z); if (rd < 12) h = Math.min(h, lerp(seaY - 5, h, smoothstep(-6, 12, rd))); }
     if (sea) { const sd = sea(x, z); if (sd > -30) h = Math.min(h, lerp(h, seaY - 5, smoothstep(-30, 25, sd))); } return h; };
@@ -2520,7 +2550,7 @@ function buildCity(T, def) {
 
   // chão
   {
-    const SIZE = 1900, RES = 110;
+    const SIZE = Math.max(bx1 - bx0, bz1 - bz0) + 1000, RES = Math.min(200, Math.ceil(SIZE / 13));
     const geo = new THREE.PlaneGeometry(SIZE, SIZE, RES, RES); geo.rotateX(-Math.PI / 2); geo.translate(CX, 0, CZ);
     const pos = geo.attributes.position, cols = new Float32Array(pos.count * 3);
     for (let v = 0; v < pos.count; v++) {
@@ -2550,21 +2580,23 @@ function buildCity(T, def) {
     if (vLen) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     g.computeVertexNormals(); const m = new THREE.Mesh(g, mat); W.group.add(m); return m;
   }
-  const roadTex = canvasTex(64, 128, (g, w, h) => {
-    g.fillStyle = '#4e4f55'; g.fillRect(0, 0, w, h);
-    for (let k = 0; k < 900; k++) { const v = 70 + Math.random() * 28 | 0; g.fillStyle = `rgb(${v},${v},${v + 3})`; g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 1, 1); }
-    g.fillStyle = 'rgba(30,30,34,0.35)'; g.fillRect(14, 0, 8, h); g.fillRect(w - 22, 0, 8, h);
-    g.fillStyle = '#d8d6cf'; g.fillRect(2, 0, 2, h); g.fillRect(w - 4, 0, 2, h);
-    g.fillRect(31, 0, 2, 40);
-  }, { mip: true, repeat: true });
+  const roadTex = roadTexture(def.road);
   // a textura usa u ao longo da largura; strip gera u=0 em l0 e u=1 em l1
   strip(-RW, RW, 0, 0, 0, N, null, toon(0xffffff, { map: roadTex, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), 16);
   const curbCol = i => Math.abs(T.curv[i]) > 0.012 ? (Math.floor(i * T.ds / 3) % 2 ? [0.68, 0.14, 0.13] : [0.82, 0.81, 0.78]) : [0.62, 0.62, 0.6];
   const cm = toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   strip(RW, RW + CURB, 0.02, 0.02, 0, N, curbCol, cm); strip(-RW - CURB, -RW, 0.02, 0.02, 0, N, curbCol, cm);
-  const walkCol = i => { const v = Math.floor(i * T.ds / 2) % 2 ? 0.62 : 0.58; return [v, v, v * 0.98]; };
-  const wm = toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
-  strip(RW + CURB, WALL + 3, 0.0, 0.15, 0, N, walkCol, wm); strip(-WALL - 3, -RW - CURB, 0.15, 0.0, 0, N, walkCol, wm);
+  const wTex = walkTexture(def.walk || 'concreto'); wTex.repeat.set(2, 1);
+  const wm = toon(0xffffff, { map: wTex, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  strip(RW + CURB, WALL + 3, 0.0, 0.15, 0, N, null, wm, 3.5); strip(-WALL - 3, -RW - CURB, 0.15, 0.0, 0, N, null, wm, 3.5);
+  // paredão sob a calçada: esconde o vão quando a pista passa acima do chão (ladeiras, viadutos)
+  for (const sg of [1, -1]) strip(sg * (WALL + 3), sg * (WALL + 3), sg > 0 ? 0.15 : -40, sg > 0 ? -40 : 0.15, 0, N, null, toon(0x8a8680, { side: THREE.DoubleSide }));
+  const secR = nm => { const k = T.sectors.findIndex(x => x.name === nm); if (k < 0) return null; const a2 = T.sectors[k].i, b2 = T.sectors[(k + 1) % T.sectors.length].i; return [a2, b2 > a2 ? b2 : b2 + N]; };
+  // paralelepípedo e faixa de ônibus em trechos
+  const cobT = cobbleTexture(); cobT.repeat.set(3, 1);
+  for (const nm of CC.cobble || []) { const rr = secR(nm); if (rr) strip(-RW, RW, 0.012, 0.012, rr[0], rr[1], null, toon(0xffffff, { map: cobT, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 6); }
+  const busT = busLaneTexture();
+  for (const nm of CC.bus || []) { const rr = secR(nm); if (rr) strip(-RW + 0.15, -RW + 3.4, 0.012, 0.012, rr[0], rr[1], null, toon(0xffffff, { map: busT, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 30); }
   const wallMat = toon(0xb9b5ad, { side: THREE.DoubleSide });
   for (const sg of [1, -1]) {
     const pos = [], idx = [];
@@ -2602,7 +2634,7 @@ function buildCity(T, def) {
     const p = at(0, 0), g = new THREE.Group(); g.position.set(p.x, T.py[0], p.z); g.rotation.y = p.h; W.group.add(g);
     const span = WALL + 0.6;
     box(0.6, 8, 0.6, 0x2b2d33, span, 4, 0, g); box(0.6, 8, 0.6, 0x2b2d33, -span, 4, 0, g);
-    const face = basic(0xffffff, { map: label('CIRCUITO VILA MARIANA', '#151515', '#e8e8e8') }), side = toon(0x151515);
+    const face = basic(0xffffff, { map: label(def.name.toUpperCase(), '#151515', '#e8e8e8') }), side = toon(0x151515);
     const ban = new THREE.Mesh(new THREE.BoxGeometry(span * 2 + 0.6, 1.6, 0.4), [side, side, side, side, face, face]); ban.position.y = 7.3; outline(ban, 1.03); g.add(ban);
   }
   // passarela sobre a reta principal
@@ -2696,8 +2728,8 @@ function buildCity(T, def) {
     let w = 14 + rng() * 6, dd = 14 + rng() * 6;
     const maxHalf = d - WALL - 4; if (maxHalf < 4) continue;
     w = Math.min(w, maxHalf * 1.6); dd = Math.min(dd, maxHalf * 1.6);
-    const y = groundH(x, z) - 0.5;
-    bBatches[ci].add(x, y, z, w, FLOORS[ci] * 3.1 + 0.5, dd, Math.atan2(T.fx[q.i], T.fz[q.i]), TINT[Math.floor(rng() * TINT.length)]);
+    const y0 = groundH(x, z) - 0.5, y = Math.min(y0, groundH(x - w / 2, z - dd / 2), groundH(x + w / 2, z - dd / 2), groundH(x - w / 2, z + dd / 2), groundH(x + w / 2, z + dd / 2)) - 0.6;
+    bBatches[ci].add(x, y, z, w, FLOORS[ci] * 3.1 + 0.5 + (y0 - y), dd, Math.atan2(T.fx[q.i], T.fz[q.i]), TINT[Math.floor(rng() * TINT.length)]);
   }
   for (const b of bBatches) b.build(W.group);
 
@@ -2745,7 +2777,13 @@ function buildCity(T, def) {
     pil.build(W.group); }
   for (const b of [trunks, crowns, palmL]) b.build(W.group);
   W.waterMats = [];
-  if (sea) { const wm = toon(0x4d6a7e, { transparent: true, opacity: 0.92 }); const m = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2), wm); m.position.set(CX, seaY, CZ); W.group.add(m); W.waterMats.push(wm); }
+  if (sea) { const wm = toon(0x4d6a7e, { transparent: true, opacity: 0.92 }); seaMesh(W, sea, CX, CZ, seaY, Math.max(bx1 - bx0, bz1 - bz0) + 3000, wm); W.waterMats.push(wm); }
+  for (const rv of rivers) { const wm = toon(0x4d6a7e); const dx = rv.b[0] - rv.a[0], dz = rv.b[1] - rv.a[1], L = Math.hypot(dx, dz); const m = new THREE.Mesh(new THREE.PlaneGeometry(rv.w + 10, L + 40).rotateX(-Math.PI / 2), wm); m.position.set((rv.a[0] + rv.b[0]) / 2, seaY + 0.3, (rv.a[1] + rv.b[1]) / 2); m.rotation.y = Math.atan2(dx, dz); W.group.add(m); W.waterMats.push(wm); }
+  W.terrainH = groundH;
+  // objetos de cenário e carros estacionados
+  const seaSideFn = i => { if (!sea) return 1; const p1 = at(i, 30), p2 = at(i, -30); return sea(p1.x, p1.z) > sea(p2.x, p2.z) ? 1 : -1; };
+  scatterProps(W, T, def, CC.props, { groundH, nearest, seaSide: seaSideFn, blocked: (x, z) => blocked(x, z) || inSea(x, z, 22) || (rivers.length && riverD(x, z) < 4) });
+  if (CC.parked) { const pool = CARS.filter(s => s.cls === 'A' || (s.cls === 'B' && ['sport', 'coupe', 'gt', 'viper', 'rear911'].includes(s.body))); const rr = secR(CC.parked[0]); if (rr) for (let k = 0; k < CC.parked[1]; k++) { const i = (rr[0] + Math.round((k + 0.5) * (rr[1] - rr[0]) / CC.parked[1])) % N, sg = -seaSideFn(i), p = at(i, sg * (WALL + 5.5)); if (blocked(p.x, p.z)) continue; const spec = pool[Math.floor(rng() * pool.length)], v = makeCarVisual(spec, spec.color, W.group); v.root.position.set(p.x, groundH(p.x, p.z) + 0.35, p.z); v.root.rotation.y = p.h + (k % 2 ? 0 : Math.PI); if (v.shadow) v.shadow.visible = false; } }
   W.lamps = lampLine(W, T, { spacing: 32, lat: WALL + 0.9, alternate: true, height: 8, arm: 1.8 });
   // faixas de pedestre na saída das esquinas
   {
@@ -3739,6 +3777,134 @@ function buildRear(spec, B, D, poly, K) {
   add(B.W * tw * 0.88, 0.08, 0.04, black, 0, B.clr + 0.07, faceX(poly, B.clr + 0.07, false) - 0.025);
   return glows;
 }
+// =================== OBJETOS DE CENÁRIO (instanciados) ===================
+// cada objeto é uma lista de peças [forma, cor, dx, dy, dz, sx, sy, sz, ry]; formas: b caixa, c cilindro, k cone, s esfera
+const PROP_DEF = {
+  orelhao: [['c', 0x8a8f96, 0, 1.1, 0, 0.06, 2.2, 0.06], ['s', 0xe8661c, 0, 2.15, 0.15, 0.55, 0.75, 0.55], ['b', 0x2a2a2c, 0, 1.75, 0.12, 0.2, 0.3, 0.06]],
+  orelhaoAzul: [['c', 0x8a8f96, 0, 1.1, 0, 0.06, 2.2, 0.06], ['s', 0x1f5fb8, 0, 2.15, 0.15, 0.55, 0.75, 0.55]],
+  banca: [['b', 0x2f5a3a, 0, 1.2, 0, 3.2, 2.4, 2], ['b', 0x1d2f22, 0, 2.5, 0.2, 3.6, 0.16, 2.6], ['b', 0xd8b830, 0, 1.3, 1.02, 2.8, 0.9, 0.05], ['b', 0xc8402c, 0, 2.1, 1.02, 3, 0.3, 0.06]],
+  ponto: [['b', 0x6a6e74, 0, 2.6, 0, 4.2, 0.12, 1.7], ['b', 0x3f5a6a, 0, 1.5, -0.75, 4, 1.8, 0.06], ['b', 0x6a6e74, 1.95, 1.3, -0.7, 0.1, 2.6, 0.1], ['b', 0x6a6e74, -1.95, 1.3, -0.7, 0.1, 2.6, 0.1], ['b', 0x8a5a3a, 0, 0.5, -0.4, 3, 0.08, 0.45], ['b', 0xe0c020, 2.4, 2.4, 0.3, 0.6, 0.4, 0.05], ['c', 0x8a8f96, 2.4, 1.2, 0.3, 0.05, 2.4, 0.05]],
+  lixeira: [['c', 0xe8661c, 0, 0.45, 0, 0.26, 0.9, 0.26], ['c', 0x5a5d63, 0, 0.45, 0, 0.05, 0.9, 0.05]],
+  banco: [['b', 0x8a5a3a, 0, 0.48, 0, 1.8, 0.08, 0.5], ['b', 0x8a5a3a, 0, 0.8, -0.22, 1.8, 0.4, 0.06], ['b', 0x2a2a2c, 0.75, 0.24, 0, 0.08, 0.48, 0.45], ['b', 0x2a2a2c, -0.75, 0.24, 0, 0.08, 0.48, 0.45]],
+  hotdog: [['b', 0xf2f2ee, 0, 0.75, 0, 1.7, 0.8, 0.85], ['b', 0xc8141f, 0, 1.2, 0, 1.75, 0.12, 0.9], ['c', 0x1a1a1a, 0.55, 0.25, 0.45, 0.25, 0.08, 0.25], ['c', 0x1a1a1a, -0.55, 0.25, 0.45, 0.25, 0.08, 0.25], ['c', 0x8a8f96, 0, 1.8, 0, 0.04, 1.4, 0.04], ['k', 0xc8141f, 0, 2.6, 0, 1.3, 0.5, 1.3], ['b', 0xe0c020, 0, 0.95, 0.44, 1.2, 0.25, 0.02]],
+  quiosque: [['c', 0xf2efe8, 0, 1.2, 0, 2.2, 2.4, 2.2], ['k', 0x8a6a3a, 0, 3.1, 0, 3.4, 1.4, 3.4], ['b', 0x3a8acf, 0, 1.1, 2.0, 2.6, 0.5, 0.2]],
+  salvavidas: [['b', 0xf2f2ee, 0.7, 1.5, 0.7, 0.1, 3, 0.1], ['b', 0xf2f2ee, -0.7, 1.5, 0.7, 0.1, 3, 0.1], ['b', 0xf2f2ee, 0.7, 1.5, -0.7, 0.1, 3, 0.1], ['b', 0xf2f2ee, -0.7, 1.5, -0.7, 0.1, 3, 0.1], ['b', 0xc8141f, 0, 3.6, 0, 1.8, 1.3, 1.8], ['b', 0xe0c020, 0, 4.4, 0, 2.1, 0.2, 2.1], ['b', 0xc8141f, 0.9, 5.2, 0, 0.04, 1.6, 0.04]],
+  guardasol: [['c', 0xd8d8d4, 0, 1.1, 0, 0.03, 2.2, 0.03], ['k', 0xc8141f, 0, 2.1, 0, 1.2, 0.45, 1.2]],
+  carro: [['b', 0xffffff, 0, 0.55, 0, 1.75, 0.65, 4.1], ['b', 0x1b2430, 0, 1.05, -0.2, 1.55, 0.45, 2.1], ['c', 0x151515, 0.82, 0.3, 1.3, 0.3, 0.2, 0.3], ['c', 0x151515, -0.82, 0.3, 1.3, 0.3, 0.2, 0.3], ['c', 0x151515, 0.82, 0.3, -1.3, 0.3, 0.2, 0.3], ['c', 0x151515, -0.82, 0.3, -1.3, 0.3, 0.2, 0.3]],
+  onibus: [['b', 0xffffff, 0, 1.65, 0, 2.5, 2.7, 12], ['b', 0x1b2430, 0, 2.1, 0, 2.52, 0.9, 10.5], ['b', 0x1b2430, 0, 2.0, 5.98, 2.3, 1.3, 0.06], ['c', 0x151515, 1.15, 0.5, 4, 0.5, 0.3, 0.5], ['c', 0x151515, -1.15, 0.5, 4, 0.5, 0.3, 0.5], ['c', 0x151515, 1.15, 0.5, -3.5, 0.5, 0.3, 0.5], ['c', 0x151515, -1.15, 0.5, -3.5, 0.5, 0.3, 0.5]],
+  poste: [['c', 0x6a4a32, 0, 4.5, 0, 0.13, 9, 0.13], ['b', 0x6a4a32, 0, 8.4, 0, 1.6, 0.12, 0.12], ['c', 0x8a8f96, 0, 7.4, 0.25, 0.25, 0.6, 0.25]],
+  vaca: [['b', 0xf2efe8, 0, 1.0, 0, 0.7, 0.75, 1.7], ['b', 0x1a1a1a, 0, 1.15, 0.3, 0.72, 0.4, 0.5], ['b', 0xf2efe8, 0, 1.25, 1.0, 0.4, 0.45, 0.5], ['b', 0x3a3a3c, 0.25, 0.35, 0.6, 0.12, 0.7, 0.12], ['b', 0x3a3a3c, -0.25, 0.35, 0.6, 0.12, 0.7, 0.12], ['b', 0x3a3a3c, 0.25, 0.35, -0.6, 0.12, 0.7, 0.12], ['b', 0x3a3a3c, -0.25, 0.35, -0.6, 0.12, 0.7, 0.12]],
+  feno: [['c', 0xd8b860, 0, 0.75, 0, 0.75, 1.3, 0.75, 'x']],
+  caixadagua: [['b', 0x6a6e74, 0.6, 2, 0.6, 0.1, 4, 0.1], ['b', 0x6a6e74, -0.6, 2, 0.6, 0.1, 4, 0.1], ['b', 0x6a6e74, 0.6, 2, -0.6, 0.1, 4, 0.1], ['b', 0x6a6e74, -0.6, 2, -0.6, 0.1, 4, 0.1], ['c', 0x2f6fb8, 0, 4.6, 0, 0.9, 1.2, 0.9]],
+  camelo: [['b', 0x8a6a4a, 0, 0.8, 0, 1.8, 0.08, 1], ['b', 0x5a5d63, 0.8, 0.4, 0, 0.06, 0.8, 0.9], ['b', 0x5a5d63, -0.8, 0.4, 0, 0.06, 0.8, 0.9], ['b', 0x1f5fb8, 0, 2.2, 0, 2.2, 0.06, 1.6], ['c', 0x8a8f96, 0, 1.5, 0, 0.03, 1.4, 0.03], ['b', 0xe0c020, 0.3, 0.95, 0, 0.6, 0.25, 0.5], ['b', 0xc8141f, -0.4, 0.95, 0.1, 0.5, 0.2, 0.4]],
+  acaraje: [['b', 0xf2f2ee, 0, 0.75, 0, 1.4, 0.06, 0.8], ['c', 0x8a6a4a, 0, 0.38, 0, 0.06, 0.76, 0.06], ['c', 0xf2f2ee, 0, 1.6, 0, 0.03, 1.8, 0.03], ['k', 0xf2f2ee, 0, 2.6, 0, 1.3, 0.4, 1.3], ['k', 0xf2f2ee, 0.9, 0.55, -0.6, 0.45, 1.1, 0.45], ['s', 0x6a4a32, 0.9, 1.25, -0.6, 0.16, 0.18, 0.16], ['s', 0xf2f2ee, 0.9, 1.45, -0.6, 0.2, 0.16, 0.2]],
+  jangada: [['b', 0x8a6a4a, 0, 0.2, 0, 1.6, 0.2, 5], ['c', 0x6a4a32, 0, 2.6, 0.6, 0.05, 4.8, 0.05], ['k', 0xf2efe8, 0, 3.0, 0.1, 1.6, 4, 0.12]],
+  pessoa: [['c', 0x2f5a8a, 0, 0.45, 0, 0.13, 0.9, 0.13], ['c', 0xc8402c, 0, 1.25, 0, 0.2, 0.7, 0.16], ['s', 0xc49a7a, 0, 1.75, 0, 0.13, 0.15, 0.13]],
+  cone: [['k', 0xe8661c, 0, 0.35, 0, 0.25, 0.7, 0.25], ['b', 0xf2f2ee, 0, 0.42, 0, 0.3, 0.08, 0.3]],
+  floreira: [['b', 0x8a8680, 0, 0.35, 0, 1.4, 0.7, 1.4], ['s', 0x3f6a34, 0, 0.9, 0, 0.7, 0.45, 0.7], ['s', 0xc8406a, 0.2, 1.05, 0.1, 0.25, 0.2, 0.25]],
+  bicicletario: [['b', 0x8a8f96, 0, 0.45, 0, 2.4, 0.06, 0.06], ['b', 0x8a8f96, -1.2, 0.22, 0, 0.06, 0.45, 0.06], ['b', 0x8a8f96, 1.2, 0.22, 0, 0.06, 0.45, 0.06], ['c', 0xc8141f, -0.6, 0.35, 0, 0.32, 0.04, 0.32, 'z'], ['c', 0x1f5fb8, 0.5, 0.35, 0, 0.32, 0.04, 0.32, 'z']],
+  bandeiras: [['c', 0xd8d8d4, 0, 3, 0, 0.05, 6, 0.05], ['b', 0x2f8a44, 0.6, 5.5, 0, 1.2, 0.8, 0.02], ['b', 0xe0c020, 0.6, 5.5, 0.012, 0.6, 0.4, 0.01]],
+  tenda: [['b', 0xc8141f, 0, 2.8, 0, 3.2, 0.1, 3.2], ['k', 0xc8141f, 0, 3.3, 0, 2.3, 0.9, 2.3], ['c', 0xd8d8d4, 1.5, 1.4, 1.5, 0.04, 2.8, 0.04], ['c', 0xd8d8d4, -1.5, 1.4, 1.5, 0.04, 2.8, 0.04], ['c', 0xd8d8d4, 1.5, 1.4, -1.5, 0.04, 2.8, 0.04], ['c', 0xd8d8d4, -1.5, 1.4, -1.5, 0.04, 2.8, 0.04]],
+  caminhaoCana: [['b', 0xc8402c, 0, 1.6, 4.2, 2.4, 2.2, 2.2], ['b', 0x5a5d63, 0, 0.9, 0, 2.4, 0.3, 10], ['b', 0x6a7a3a, 0, 2.3, -1.2, 2.5, 2.4, 7.6], ['c', 0x151515, 1.1, 0.5, 3.8, 0.5, 0.3, 0.5], ['c', 0x151515, -1.1, 0.5, 3.8, 0.5, 0.3, 0.5], ['c', 0x151515, 1.1, 0.5, -3.5, 0.5, 0.3, 0.5], ['c', 0x151515, -1.1, 0.5, -3.5, 0.5, 0.3, 0.5]]
+};
+const PROP_COLORS = { carro: [0xc8141f, 0x1f3a6b, 0xf2f2ee, 0x2a2a2c, 0x8a8f96, 0xd8b830, 0x2f5a3a, 0x9aa0a6], onibus: [0xd8d8d4, 0x2f7a44, 0x1f5fb8, 0xc8402c, 0xe0a020], pessoa: [0x2f5a8a, 0xc8402c, 0x2f8a44, 0xe0c020, 0x6a3a8a, 0xf2f2ee, 0x2a2a2c], guardasol: [0xc8141f, 0x1f5fb8, 0xe0c020, 0x2f8a44, 0xf28a1a, 0xf2f2ee], hotdog: [0xc8141f, 0x1f5fb8], camelo: [0x1f5fb8, 0xc8141f, 0x2f8a44, 0xe0a020], tenda: [0xc8141f, 0x1f5fb8, 0xf2f2ee, 0xe0c020] };
+function PropSet(group) {
+  const G = { b: new THREE.BoxGeometry(1, 1, 1), c: new THREE.CylinderGeometry(1, 1, 1, 8), k: new THREE.ConeGeometry(1, 1, 8), s: new THREE.SphereGeometry(1, 8, 6) };
+  const B = {}; for (const k in G) B[k] = new Batch(G[k], toon(0xffffff), { outline: 1.04, maxDist: 520 });
+  const B2 = { cx: new Batch(new THREE.CylinderGeometry(1, 1, 1, 10).rotateZ(Math.PI / 2), toon(0xffffff), { maxDist: 520 }), cz: new Batch(new THREE.CylinderGeometry(1, 1, 1, 10).rotateX(Math.PI / 2), toon(0xffffff), { maxDist: 520 }) };
+  let n = 0;
+  return {
+    add(kind, x, y, z, ry, opt) {
+      const D = PROP_DEF[kind]; if (!D) return; n++;
+      const cs = Math.cos(ry), sn = Math.sin(ry), pal = PROP_COLORS[kind], main = opt && opt.color !== undefined ? opt.color : pal ? pal[Math.floor(Math.random() * pal.length)] : null, sc = (opt && opt.scale) || 1;
+      D.forEach((p, i) => {
+        const [sh, col, dx, dy, dz, sx, sy, sz, ax] = p, wx = x + (dx * cs + dz * sn) * sc, wz = z + (-dx * sn + dz * cs) * sc;
+        let c = col; if (main !== null && (i === (kind === 'pessoa' ? 1 : kind === 'guardasol' ? 1 : kind === 'hotdog' ? 5 : kind === 'camelo' ? 3 : 0) || (kind === 'tenda' && i < 2))) c = main;
+        const bt = ax === 'x' ? B2.cx : ax === 'z' ? B2.cz : B[sh];
+        const hh = sh === 's' || sh === 'k' || sh === 'c' ? 1 : 1;
+        bt.add(wx, y + dy * sc, wz, (sh === 'b' ? sx : sx) * sc, sy * sc * hh, (sh === 'b' ? sz : sz) * sc, ry, c);
+      });
+    },
+    count: () => n,
+    build() { for (const k in B) B[k].build(group); B2.cx.build(group); B2.cz.build(group); }
+  };
+}
+// espalha objetos ao longo da pista; zonas: calcada (atrás da mureta), lote (antes dos prédios), beira (estradas), longe (campo)
+function scatterProps(W, T, def, recipe, ctx) {
+  if (!recipe || !recipe.length) return;
+  const N = T.N, PS = PropSet(W.group), rng = mulberry32(seedOf('props' + def.id)), gh = ctx.groundH || ((x, z) => { const q = ctx.nearest(x, z); return surfY(T, q.i, q.lat) - 0.35; });
+  const blocked = ctx.blocked || (() => false), secs = T.sectors || [];
+  const inSec = (i, names) => { if (!names) return true; for (const nm of names) { const k = secs.findIndex(s => s.name === nm); if (k < 0) continue; const a = secs[k].i, b = secs[(k + 1) % secs.length].i; if (a <= b ? i >= a && i < b : i >= a || i < b) return true; } return false; };
+  const zoneLat = { calcada: [WALL + 1.0, WALL + 2.6], lote: [WALL + 4, WALL + 8], beira: [WALL + 2.5, WALL + 7], longe: [WALL + 25, WALL + 120], praia: [WALL + 12, WALL + 40] };
+  const wires = [];
+  for (const r of recipe) {
+    const [kind, every, zone, sectors, sideOpt] = r, step = Math.max(1, Math.round(every / T.ds)), [l0, l1] = zoneLat[zone] || zoneLat.calcada;
+    let lastPole = { 1: null, '-1': null };
+    for (let i = Math.floor(rng() * step); i < N; i += step) {
+      if (!inSec(i, sectors)) continue;
+      const sides = sideOpt === 'sea' || sideOpt === 'land' ? [ctx.seaSide ? (sideOpt === 'sea' ? ctx.seaSide(i) : -ctx.seaSide(i)) : 1] : sideOpt ? [sideOpt] : [1, -1];
+      for (const sg of sides) {
+        if (zone !== 'longe' && kind !== 'poste' && rng() < 0.25) continue;
+        const l = sg * lerp(l0, l1, kind === 'poste' ? 0.3 : rng()), x = T.px[i] + T.lx[i] * l, z = T.pz[i] + T.lz[i] * l;
+        const q = ctx.nearest(x, z); if (q.d < Math.min(l0, WALL + 0.8) - 0.3) continue;
+        if (blocked(x, z, kind)) continue;
+        const h = Math.atan2(T.fx[i], T.fz[i]), face = kind === 'carro' || kind === 'onibus' || kind === 'caminhaoCana' ? h : h + (sg > 0 ? -Math.PI / 2 : Math.PI / 2);
+        const y = zone === 'calcada' ? surfY(T, i, sg * WALL) + 0.15 : gh(x, z);
+        PS.add(kind, x, y, z, kind === 'vaca' || kind === 'pessoa' || kind === 'guardasol' ? rng() * 6.28 : face);
+        if (kind === 'poste') { const lp = lastPole[sg]; if (lp) wires.push(lp[0], lp[1] + 8.3, lp[2], x, y + 8.3, z, lp[0], lp[1] + 7.9, lp[2], x, y + 7.9, z); lastPole[sg] = [x, y, z]; }
+      }
+    }
+  }
+  PS.build();
+  if (wires.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(wires, 3)); W.group.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x1a1a1a }))); }
+}
+// água só do lado do mar, em grade (sem atravessar a cidade)
+function seaMesh(W, sea, CX, CZ, seaY, size, mat) {
+  const R = 60, cell = size / R, pos = [];
+  for (let a = 0; a < R; a++) for (let b = 0; b < R; b++) {
+    const x0 = CX - size / 2 + a * cell, z0 = CZ - size / 2 + b * cell, x1 = x0 + cell, z1 = z0 + cell;
+    if (Math.max(sea(x0, z0), sea(x1, z0), sea(x0, z1), sea(x1, z1)) < -40) continue;
+    pos.push(x0, seaY, z0, x0, seaY, z1, x1, seaY, z0, x1, seaY, z0, x0, seaY, z1, x1, seaY, z1);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mat); W.group.add(m); return m;
+}
+// texturas de piso: asfalto, concreto, paralelepípedo, calçadas
+function roadTexture(style) {
+  const S = Object.assign({ c: '#4e4f55', noise: 28, center: 'dash', cl: '#d8d6cf', edge: '#d8d6cf', wear: 0.35 }, style || {});
+  return canvasTex(64, 128, (g, w, h) => {
+    g.fillStyle = S.c; g.fillRect(0, 0, w, h);
+    const base = parseInt(S.c.slice(1, 3), 16);
+    for (let k = 0; k < 900; k++) { const v = Math.max(0, base - 10 + Math.random() * S.noise) | 0; g.fillStyle = `rgb(${v},${v},${v + 3})`; g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 1, 1); }
+    if (S.slabs) { g.fillStyle = 'rgba(0,0,0,0.25)'; for (let y = 0; y < h; y += 32) g.fillRect(0, y, w, 1); g.fillRect(31, 0, 1, h); }
+    if (S.patch) { g.fillStyle = 'rgba(20,20,22,0.35)'; for (let k = 0; k < 3; k++) g.fillRect(Math.random() * 40, Math.random() * 110, 10 + Math.random() * 14, 8 + Math.random() * 16); }
+    g.fillStyle = `rgba(30,30,34,${S.wear})`; g.fillRect(14, 0, 8, h); g.fillRect(w - 22, 0, 8, h);
+    if (S.edge) { g.fillStyle = S.edge; g.fillRect(2, 0, 2, h); g.fillRect(w - 4, 0, 2, h); }
+    g.fillStyle = S.cl;
+    if (S.center === 'dash') g.fillRect(31, 0, 2, 40);
+    else if (S.center === 'double') { g.fillRect(29, 0, 2, h); g.fillRect(33, 0, 2, h); }
+    else if (S.center === 'solid') g.fillRect(31, 0, 2, h);
+  }, { mip: true, repeat: true });
+}
+function cobbleTexture(col) {
+  return canvasTex(64, 64, (g, w, h) => {
+    g.fillStyle = '#2a2a2c'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 8) for (let x = (y / 8 % 2) * 5; x < w + 8; x += 10) { const v = 90 + Math.random() * 50 | 0; g.fillStyle = col ? col(v) : `rgb(${v},${v - 4},${v - 10})`; g.fillRect(x - 4, y + 1, 9, 6); }
+  }, { mip: true, repeat: true });
+}
+function walkTexture(kind) {
+  return canvasTex(64, 64, (g, w, h) => {
+    if (kind === 'portugues') { g.fillStyle = '#ece8e0'; g.fillRect(0, 0, w, h); g.strokeStyle = '#1e1e20'; g.lineWidth = 6; g.beginPath(); for (let x = 0; x <= w; x++) { const y = 32 + Math.sin(x / w * Math.PI * 2) * 18; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+    else if (kind === 'ladrilho') { for (let y = 0; y < h; y += 16) for (let x = 0; x < w; x += 16) { g.fillStyle = (x + y) / 16 % 2 ? '#8a3a2c' : '#c8c0b4'; g.fillRect(x, y, 16, 16); g.fillStyle = '#5a5d63'; g.fillRect(x + 6, y + 6, 4, 4); } }
+    else if (kind === 'tijolo') { g.fillStyle = '#6a3a2c'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 8) for (let x = (y / 8 % 2) * 8; x < w + 16; x += 16) { g.fillStyle = `rgb(${150 + Math.random() * 30 | 0},${70 + Math.random() * 20 | 0},50)`; g.fillRect(x - 8, y + 1, 15, 6); } }
+    else if (kind === 'granito') { g.fillStyle = '#9a9690'; g.fillRect(0, 0, w, h); for (let k = 0; k < 500; k++) { g.fillStyle = Math.random() < 0.5 ? '#6a6660' : '#c8c4bc'; g.fillRect(Math.random() * w, Math.random() * h, 1, 1); } g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(0, 31, w, 1); }
+    else if (kind === 'pedra') { g.fillStyle = '#3a3a3c'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 10) for (let x = (y / 10 % 2) * 6; x < w + 12; x += 12) { const v = 110 + Math.random() * 60 | 0; g.fillStyle = `rgb(${v},${v - 6},${v - 14})`; g.fillRect(x - 5, y + 1, 10, 8); } }
+    else { g.fillStyle = '#a4a29c'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, 31, w, 1); g.fillRect(0, 63, w, 1); g.fillRect(31, 0, 1, h); }
+  }, { mip: true, repeat: true });
+}
+function busLaneTexture() {
+  return canvasTex(64, 256, (g, w, h) => { g.fillStyle = '#8a2c22'; g.fillRect(0, 0, w, h); g.save(); g.translate(32, 128); g.rotate(-Math.PI / 2); g.fillStyle = '#f2f2ee'; g.font = 'bold 20px sans-serif'; g.textAlign = 'center'; g.fillText('ÔNIBUS', 0, 7); g.restore(); g.fillStyle = '#f2f2ee'; g.fillRect(60, 0, 4, h); }, { mip: true, repeat: true });
+}
 // =================== MARCOS DAS PISTAS (construções simplificadas e reconhecíveis) ===================
 function lmBox(g, w, h, d, col, x, y, z, ol) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof col === 'object' ? col : toon(col)); m.position.set(x, y, z); if (ol !== false) outline(m, 1.02); g.add(m); return m; }
 function lmCyl(g, rt, rb, h, seg, col, x, y, z, ol) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), typeof col === 'object' ? col : toon(col)); m.position.set(x, y, z); if (ol !== false) outline(m, 1.03); g.add(m); return m; }
@@ -3833,7 +3999,8 @@ function trackGeo(T) {
     for (let k = -step; k <= step; k++) { const i = (best + k + N) % N; const d = (x - T.px[i]) ** 2 + (z - T.pz[i]) ** 2; if (d < bd) { bd = d; best = i; } }
     NQ.i = best; NQ.d = Math.sqrt(bd); NQ.lat = (x - T.px[best]) * T.lx[best] + (z - T.pz[best]) * T.lz[best]; return NQ;
   };
-  return { bx0, bx1, bz0, bz1, ymin, CX: (bx0 + bx1) / 2, CZ: (bz0 + bz1) / 2, NQ, nearest };
+  const CX = (bx0 + bx1) / 2, CZ = (bz0 + bz1) / 2; let R0 = 0; for (let i = 0; i < N; i += 4) R0 = Math.max(R0, Math.hypot(T.px[i] - CX, T.pz[i] - CZ));
+  return { bx0, bx1, bz0, bz1, ymin, CX, CZ, R0, NQ, nearest };
 }
 // meio-plano de mar: n·p > d0 é mar, com d0 calculado pela pista + folga
 function seaFn(T, sea) {
@@ -3845,6 +4012,9 @@ function buildThemed(T, def) {
   const th = def.theme, W = { group: new THREE.Group(), chunks: [], urban: false, spinners: [] };
   CHUNK_LIST = W.chunks; scene.add(W.group);
   const N = T.N, rng = mulberry32(seedOf(def.id)), K = trackGeo(T), { NQ, nearest, CX, CZ } = K;
+  const secIdx = nm => { const s = T.sectors.find(x => x.name === nm); return s ? s.i : -1; };
+  const inR = (i, a, b) => a <= b ? i >= a && i <= b : i >= a || i <= b;
+  const canR = th.canyon ? [secIdx(th.canyon[0]), secIdx(th.canyon[1])] : null;
   W.center = { x: CX, z: CZ }; W.nearest = nearest;
   const spanX = K.bx1 - K.bx0, spanZ = K.bz1 - K.bz0;
   const sea = seaFn(T, th.sea), seaY = K.ymin - (th.sea && th.sea.deep ? th.sea.deep : 2.5);
@@ -3852,8 +4022,10 @@ function buildThemed(T, def) {
   const groundH = (x, z) => {
     const q = nearest(x, z), ys = surfY(T, q.i, q.lat), n = fbm(x * 0.0035 + 5, z * 0.0035 - 3), n2 = fbm(x * 0.012, z * 0.012);
     let h = ys - 0.35 + smoothstep(WALL + 8, WALL + 200, q.d) * ((n - 0.36) * th.hills + (n2 - 0.5) * 6);
-    h += smoothstep(600, 1300, Math.hypot(x - CX, z - CZ) - Math.max(spanX, spanZ) * 0.4) * 90 * (0.5 + n);
+    h += smoothstep(WALL + 160, WALL + 520, q.d) * smoothstep(250, 900, Math.hypot(x - CX, z - CZ) - K.R0) * 90 * (0.5 + n);
+    if (canR && inR(q.i, canR[0], canR[1])) h = Math.max(h, ys - 0.35 + smoothstep(WALL + 3, WALL + 55, q.d) * (55 + n * 30));
     for (const L of lakes) { const dl = Math.hypot(x - L.x, z - L.z); if (dl < L.r * 1.5) h = Math.min(h, lerp(L.wl - 6, h, smoothstep(L.r * 0.45, L.r * 1.35, dl))); }
+    if (q.d < WALL + 4) { const R = Math.round(45 / T.ds); for (let k = -R; k <= R; k += 2) { const i = (q.i + k + N) % N; if ((x - T.px[i]) ** 2 + (z - T.pz[i]) ** 2 < (WALL + 3) ** 2) h = Math.min(h, T.py[i] - 0.4); } }
     if (sea) { const sd = sea(x, z), deep = th.sea.deep ? 90 : 25; if (sd > -30) h = Math.min(h, lerp(h, seaY - 6, smoothstep(-30, deep, sd))); }
     return h;
   };
@@ -3901,7 +4073,8 @@ function buildThemed(T, def) {
     g.fillStyle = '#d8d6cf'; g.fillRect(2, 0, 2, h); g.fillRect(w - 4, 0, 2, h);
     if (!circuit) { g.fillStyle = '#e0b830'; g.fillRect(30, 0, 2, 56); g.fillRect(33, 0, 2, 56); }
   }, { mip: true, repeat: true });
-  strip(-RW, RW, 0, 0, 0, N, null, toon(0xffffff, { map: roadTex, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), 16);
+  const roadTex2 = def.road ? roadTexture(def.road) : roadTex;
+  strip(-RW, RW, 0, 0, 0, N, null, toon(0xffffff, { map: roadTex2, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), 16);
   const cA = th.curb ? new THREE.Color(th.curb[0]).toArray() : [0.68, 0.14, 0.13], cB = th.curb ? new THREE.Color(th.curb[1]).toArray() : [0.84, 0.83, 0.8];
   const curbCol = i => Math.abs(T.curv[i]) > (circuit ? 0.005 : 0.009) ? (Math.floor(i * T.ds / 2.8) % 2 ? cA : cB) : circuit ? (th.curb ? cA : [0.4, 0.5, 0.3]) : [0.6, 0.6, 0.58];
   const cm = toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
@@ -3962,7 +4135,7 @@ function buildThemed(T, def) {
   }
   // mar e lagos
   W.waterMats = [];
-  if (sea) { const wm = toon(0x4d6a7e, { transparent: true, opacity: 0.92 }); const m = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2), wm); m.position.set(CX, seaY, CZ); W.group.add(m); W.waterMats.push(wm); }
+  if (sea) { const wm = toon(0x4d6a7e, { transparent: true, opacity: 0.92 }); seaMesh(W, sea, CX, CZ, seaY, Math.max(spanX, spanZ) + 4000, wm); W.waterMats.push(wm); }
   for (const L of lakes) { const wm = toon(0x4d6a7e, { transparent: true, opacity: 0.9 }); const m = new THREE.Mesh(new THREE.CircleGeometry(L.r * 1.45, 28).rotateX(-Math.PI / 2), wm); m.position.set(L.x, L.wl, L.z); W.group.add(m); W.waterMats.push(wm); noVeg.push({ x: L.x, z: L.z, r: L.r * 1.3 }); if (L.boats) { const g = gAt(L.x, L.z, 0, L.wl); LM.boats(g, { r: L.r * 1.2 }); } }
   // marcos
   for (const [key, frac, side, off] of th.lm || []) {
@@ -4011,9 +4184,9 @@ function buildThemed(T, def) {
   let count = 0; const cap = th.big ? 9000 : 5000;
   for (let gx = X0; gx < X1 && count < cap; gx += stepV) for (let gz = Z0; gz < Z1; gz += stepV) {
     const x = gx + (rng() - 0.5) * stepV * 0.7, z = gz + (rng() - 0.5) * stepV * 0.7, q = nearest(x, z);
-    if (q.d < WALL + 7 || q.d > V.dist || blocked(x, z)) continue;
+    if (q.d < (V.near || WALL + 7) || q.d > V.dist || blocked(x, z)) continue;
     const dense = fbm(x * 0.005 + 7, z * 0.005) > 0.5 ? V.dens * 1.4 : V.dens * 0.5;
-    if (rng() > dense * (q.d < 40 ? 0.5 : 1)) continue;
+    if (rng() > dense * (q.d < 40 && !V.near ? 0.5 : 1)) continue;
     tree(x, z, pickKind(), 0.9 + rng() * 0.5); count++;
   }
   // lavouras em fileiras
@@ -4048,7 +4221,12 @@ function buildThemed(T, def) {
       W.inTunnel = idx2 => { let d = idx2 - i0; if (d < 0) d += N; return d < len; };
     }
   }
-  raceDress(W, T, def, { noTires: th.wall === 'tires' });
+  if (th.bike) { strip(WALL + 0.5, WALL + 2.9, 0.02, 0.02, 0, N, () => [0.6, 0.16, 0.14], toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); strip(WALL + 2.9, WALL + 3.1, 0.03, 0.03, 0, N, i => Math.floor(i * T.ds / 3) % 2 ? [0.92, 0.92, 0.9] : [0.6, 0.16, 0.14], toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); }
+  const seaSide = i => { if (!sea) return 1; const p1 = at(i, 30), p2 = at(i, -30); return sea(p1.x, p1.z) > sea(p2.x, p2.z) ? 1 : -1; };
+  if (th.vila) buildVila(W, T, th.vila, { at, gAt, groundH, sea, seaY, seaSide, noVeg, rng });
+  if (th.tunnel && W.inTunnel) buildMountain(W, T, th, { at, groundH, rng, secIdx });
+  scatterProps(W, T, def, th.props, { groundH, nearest, seaSide, blocked: (x, z) => blocked(x, z) });
+  raceDress(W, T, def, { noTires: th.wall === 'tires', skip: W.inTunnel });
   W.lamps = lampLine(W, T, { spacing: circuit ? 36 : 44, lat: WALL + 1.3, alternate: !circuit, height: circuit ? 12 : 9, arm: circuit ? 3 : 2.3 });
   W.onPreset = Pp => { for (const m of W.waterMats) m.color.setHex(Pp.water); };
   W.update = function (dt, cam, drawDist) {
@@ -4056,6 +4234,71 @@ function buildThemed(T, def) {
     spinLandmarks(W.spinners, dt);
   };
   return W;
+}
+
+// centro histórico: casario comercial colado à pista, igreja, cais e restaurante sobre palafitas
+function buildVila(W, T, V, K) {
+  const N = T.N, i0 = Math.round(V.from * N), i1 = Math.round(V.to * N), cols = [0xf0d890, 0x9fd0c8, 0xe8a888, 0xf4f0e4, 0xc8e0a0, 0xf0b8c8, 0x88b8e0];
+  const shops = new Batch(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), toon(0xffffff), { outline: 1.03, maxDist: 600 });
+  const roofs = new Batch(new THREE.ConeGeometry(0.75, 1, 4).translate(0, 0.5, 0), toon(0xffffff), { maxDist: 600 });
+  const awn = new Batch(new THREE.BoxGeometry(1, 1, 1), toon(0xffffff), { maxDist: 400 });
+  const doors = new Batch(new THREE.BoxGeometry(1, 1, 1), toon(0x2f3a4a), { maxDist: 300 });
+  for (let i = i0; i < i1; i += Math.round(9 / T.ds)) for (const sg of [1, -1]) {
+    if (K.sea && sg === K.seaSide(i)) continue;
+    const p = K.at(i, sg * (WALL + 9)), y = K.groundH(p.x, p.z), c = cols[Math.floor(K.rng() * cols.length)], h = 6 + Math.floor(K.rng() * 2) * 3.2;
+    shops.add(p.x, y - 0.4, p.z, 10, h + 0.4, 8.5, p.h, c); roofs.add(p.x, y + h, p.z, 11, 2.2, 11, p.h + Math.PI / 4, 0xa94427);
+    const f = K.at(i, sg * (WALL + 4.6)); awn.add(f.x, y + 3, f.z, 0.9, 0.12, 7, p.h, [0xc8141f, 0x2f8a44, 0x1f5fb8, 0xe0a020][Math.floor(K.rng() * 4)]);
+    const d = K.at(i, sg * (WALL + 4.7)); doors.add(d.x, y + 1.2, d.z, 0.1, 2.4, 2.2, p.h);
+    K.noVeg.push({ x: p.x, z: p.z, r: 9 });
+  }
+  shops.build(W.group); roofs.build(W.group); awn.build(W.group); doors.build(W.group);
+  // igreja matriz no largo, do lado de terra
+  const im = Math.round((i0 + i1) / 2), sgL = K.sea ? -K.seaSide(im) : 1, pc = K.at(im, sgL * (WALL + 30)), gi = K.gAt(pc.x, pc.z, pc.h + (sgL > 0 ? -Math.PI / 2 : Math.PI / 2)); LM.igreja(gi);
+  K.noVeg.push({ x: pc.x, z: pc.z, r: 26 });
+  // cais e restaurante suspenso do lado do mar
+  if (K.sea) {
+    const ip = i0 + Math.round((i1 - i0) * 0.3), sg = K.seaSide(ip), h = Math.atan2(T.fx[ip], T.fz[ip]) + (sg > 0 ? Math.PI / 2 : -Math.PI / 2);
+    let start = null; for (let d = WALL + 4; d < 300; d += 4) { const q = K.at(ip, sg * d); if (K.groundH(q.x, q.z) < K.seaY + 0.5) { start = d - 8; break; } }
+    if (start !== null) {
+      const deckY = K.seaY + 2.2, posts = new Batch(new THREE.CylinderGeometry(0.18, 0.18, 1, 6), toon(0x5a4030), { maxDist: 500 }), planks = new Batch(new THREE.BoxGeometry(1, 1, 1), toon(0x8a6a4a), { maxDist: 500 });
+      for (let d = start; d < start + 110; d += 4) { const q = K.at(ip, sg * d); planks.add(q.x, deckY, q.z, 3.4, 0.2, 4.1, h); for (const o of [-1.5, 1.5]) { const q2 = { x: q.x + Math.cos(h) * o, z: q.z - Math.sin(h) * o }; posts.add(q2.x, deckY - 3, q2.z, 1, 6, 1); } }
+      // restaurante sobre palafitas ao lado do cais
+      const ir = Math.min(N - 1, ip + Math.round(40 / T.ds)), r0 = K.at(ir, sg * (start + 26)), gr = K.gAt(r0.x, r0.z, h, deckY);
+      lmBox(gr, 22, 0.4, 16, 0x8a6a4a, 0, 0, 0); for (const x of [-10, 10]) for (const z of [-7, 7]) lmBox(gr, 0.4, 7, 0.4, 0x5a4030, x, -3.2, z, false);
+      lmBox(gr, 18, 3.2, 12, 0xf4f0e4, 0, 1.8, 0); lmRoof(gr, 21, 3.4, 15, 0xa94427, 0, 3.4, 0);
+      for (const x of [-6, 0, 6]) lmBox(gr, 3, 1.6, 0.1, 0x2f4f6f, x, 2.2, 6.05, false);
+      const lb = new THREE.Mesh(new THREE.PlaneGeometry(8, 1), basic(0xffffff, { map: lmLabel('RESTAURANTE DO CAIS', '#1d4f6a', '#ffffff'), side: THREE.DoubleSide })); lb.position.set(0, 4.2, 7.6); gr.add(lb);
+      // barcos de pesca ao lado
+      const gb = K.gAt(r0.x, r0.z, h, K.seaY); for (let k = 0; k < 4; k++) { lmBox(gb, 2.2, 1, 6, [0xf2f2ee, 0x2f6fb8, 0xc8402c][k % 3], 14 + k * 4, 0.4, -10 + k * 3, false); }
+      planks.build(W.group); posts.build(W.group);
+    }
+  }
+}
+// túnel atravessando a montanha: serra por cima do túnel, coberta de mata
+function buildMountain(W, T, th, K) {
+  const N = T.N, sc = K.secIdx(th.tunnel[0]); if (sc < 0) return;
+  const i0 = (sc + Math.round(60 / T.ds)) % N, len = Math.round(620 / T.ds), LAT = [-110, -70, -40, -22, -WALL - 1.5, -WALL + 2, 0, WALL - 2, WALL + 1.5, 22, 40, 70, 110];
+  const pos = [], idx = [], cols = [], C = LAT.length, ext = Math.round(18 / T.ds);
+  for (let k = -ext; k <= len + ext; k++) {
+    const i = ((i0 + k) % N + N) % N, edge = Math.min(1, Math.min(k + ext, len + ext - k) / ext);
+    for (let j = 0; j < C; j++) {
+      const l = LAT[j], x = T.px[i] + T.lx[i] * l, z = T.pz[i] + T.lz[i] * l, ys = surfY(T, i, clamp(l, -WALL, WALL)), g = K.groundH(x, z);
+      const top = ys + 9 + (1 - Math.abs(l) / 110) * 38 * (0.7 + 0.3 * Math.sin(k * 0.21 + j));
+      const y = Math.abs(l) >= 109 ? g : lerp(Math.max(g, ys + 7.6), Math.max(g, top), edge);
+      pos.push(x, y, z); const v = 0.85 + (j % 3) * 0.06; cols.push(0.22 * v, 0.34 * v, 0.19 * v);
+    }
+    if (k < len + ext) for (let j = 0; j < C - 1; j++) { const q = (k + ext) * C + j; idx.push(q, q + C, q + 1, q + 1, q + C, q + C + 1); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); g.setIndex(idx); g.computeVertexNormals();
+  W.group.add(new THREE.Mesh(g, toon(0xffffff, { vertexColors: true, side: THREE.DoubleSide })));
+  // mata em cima da serra
+  const tr = new Batch(new THREE.IcosahedronGeometry(1, 0), toon(0xffffff), { outline: 1.05, maxDist: 900 });
+  for (let k = 0; k < len; k += 4) for (let j = 0; j < 6; j++) {
+    const i = (i0 + k) % N, l = (K.rng() - 0.5) * 200; if (Math.abs(l) < WALL + 4) continue;
+    const ys = surfY(T, i, 0), top = ys + 9 + (1 - Math.abs(l) / 110) * 38 * 0.85, x = T.px[i] + T.lx[i] * l, z = T.pz[i] + T.lz[i] * l;
+    const s = 3 + K.rng() * 2; tr.add(x, Math.max(K.groundH(x, z), top) + s * 0.6, z, s, s * 0.8, s, K.rng() * 3, [0x2f4a2a, 0x37522f, 0x2a4226][j % 3]);
+  }
+  tr.build(W.group);
 }
 // =================== TRILHA DAS CORRIDAS: 8 faixas acid house (MP3 gerados para o jogo) ===================
 const RACE_MUSIC = [
@@ -4122,7 +4365,8 @@ const TRS = {}, WORLDS = {};
 let WORLD = null;
 function getTR(i) { if (!TRS[i]) TRS[i] = makeTracks(TRACKS[i]); return TRS[i]; }
 function getWorld(i) {
-  if (!WORLDS[i]) { const def = TRACKS[i], T = getTR(i).fwd; WORLDS[i] = def.kind === 'city' ? buildCity(T, def) : def.kind === 'airport' ? buildAirport(T, def) : def.kind === 'circuit' ? buildCircuit(T, def) : def.kind === 'themed' ? buildThemed(T, def) : buildWorld(T, def); }
+  if (!WORLDS[i]) { const def = TRACKS[i], T = getTR(i).fwd; WORLDS[i] = def.kind === 'city' ? buildCity(T, def) : def.kind === 'airport' ? buildAirport(T, def) : def.kind === 'circuit' ? buildCircuit(T, def) : def.kind === 'themed' ? buildThemed(T, def) : buildWorld(T, def);
+    if (def.props && def.kind !== 'city' && def.kind !== 'themed') { const K = trackGeo(T); scatterProps(WORLDS[i], T, def, def.props, { nearest: K.nearest, groundH: WORLDS[i].terrainH }); } }
   return WORLDS[i];
 }
 function bestKey(trackId, carId, rev) { return trackId + '|' + carId + '|' + (rev ? 'r' : 'n'); }
@@ -4813,11 +5057,11 @@ function usedMarket() {
 // ---------- licenças (provas cronometradas) ----------
 // licenças geradas: 16 provas por licença, com tipos, carros, pistas, clima e saídas variados
 const LIC_META = [
-  { id: 'E', color: '#b07a4a', reward: 3000, cls: 'E', tracks: ['terra', 'vila', 'holambra', 'moema', 'gru'], car: 'pinhao' },
-  { id: 'D', color: '#8a9aa8', reward: 6000, cls: 'D', tracks: ['gru', 'vale', 'santos', 'chapeco', 'ribeirao', 'paulista'], car: 'sirocco' },
-  { id: 'C', color: '#6f9e7a', reward: 12000, cls: 'C', tracks: ['vale', 'interlagos', 'ilhabela', 'recife', 'centro', 'guarapiranga'], car: 'tropeiro' },
-  { id: 'B', color: '#6f6f9e', reward: 22000, cls: 'B', tracks: ['interlagos', 'salvador', 'campos', 'bc', 'cerrado', 'japi'], car: 'ipe' },
-  { id: 'A', color: '#9e6f8a', reward: 40000, cls: 'A', tracks: ['interlagos', 'serramar', 'brasilia', 'piracicaba', 'mantiqueira', 'vale'], car: 'veloce' }
+  { id: 'E', color: '#b07a4a', reward: 3000, cls: 'E', tracks: ['terra', 'vila', 'holambra', 'moema', 'gru'], car: 'pinhao', pass: ['terra', 'holambra'] },
+  { id: 'D', color: '#8a9aa8', reward: 6000, cls: 'D', tracks: ['gru', 'vale', 'santos', 'chapeco', 'ribeirao', 'paulista'], car: 'sirocco', pass: ['vale', 'ribeirao'] },
+  { id: 'C', color: '#6f9e7a', reward: 12000, cls: 'C', tracks: ['vale', 'interlagos', 'ilhabela', 'recife', 'centro', 'guarapiranga'], car: 'tropeiro', pass: ['interlagos', 'guarapiranga'] },
+  { id: 'B', color: '#6f6f9e', reward: 22000, cls: 'B', tracks: ['interlagos', 'salvador', 'campos', 'bc', 'cerrado', 'japi'], car: 'ipe', pass: ['cerrado', 'interlagos'] },
+  { id: 'A', color: '#9e6f8a', reward: 40000, cls: 'A', tracks: ['interlagos', 'serramar', 'brasilia', 'piracicaba', 'mantiqueira', 'vale'], car: 'veloce', pass: ['piracicaba', 'interlagos'] }
 ];
 const TEST_PLAN = [
   ['stop', 0, 'Arrancada e frenagem'], ['stop', 1, 'Frenagem em movimento'], ['seg', 0, 'Curva com saída parada'], ['seg', 1, 'Trecho em movimento'],
@@ -4829,8 +5073,8 @@ const LICENSES = LIC_META.map((M, li) => {
   const rng = mulberry32(seedOf('licenca' + M.id)), pool = CARS.filter(c => c.cls === M.cls && c.brand !== 'stock');
   const tests = TEST_PLAN.map(([type, moving, name, ex], k) => {
     ex = ex || {};
-    const track = ex.final ? M.tracks[M.tracks.length - 1] : M.tracks[(k + li) % M.tracks.length];
-    const car = ex.alt || k % 4 === 3 ? pool[Math.floor(rng() * pool.length)].id : M.car;
+    const track = type === 'pass' ? M.pass[k < 8 ? 0 : 1] : ex.final ? M.tracks[M.tracks.length - 1] : M.tracks[(k + li) % M.tracks.length];
+    const rc = pool[Math.floor(rng() * pool.length)].id, car = type === 'pass' ? M.car : ex.alt || k % 4 === 3 ? rc : M.car;
     const v0 = moving ? [60, 80, 100, 120, 140][li] * (type === 'cones' ? 0.6 : 1) : 0;
     const dist = type === 'stop' ? [180, 220, 260, 300, 340][li] + (moving ? 60 : 0) : type === 'cones' ? 260 : type === 'pass' ? 1100 + li * 150 : type === 'drift' ? 700 : 450 + Math.round(rng() * 4) * 100;
     const isDrift = type === 'drift' && li < 2 ? false : type === 'drift';
@@ -4839,7 +5083,7 @@ const LICENSES = LIC_META.map((M, li) => {
     t.tip = { stop: `Pare o ${cn} dentro da zona vermelha, a ${t.dist} metros${v0 ? ', partindo a ' + v0 + ' km/h' : ''}. Passar da zona desclassifica.`,
       seg: `Complete o trecho de ${t.dist} metros em ${tn}${v0 ? ', já em movimento a ' + v0 + ' km/h' : ''}${t.weather === 2 ? ', com pista molhada' : ''}${t.time === 2 ? ', à noite' : ''}. Sair do asfalto ou bater desclassifica.`,
       cones: `Passe entre os cones em zigue-zague sem derrubar nenhum, a partir de ${v0} km/h, em ${tn}.`,
-      pass: `Ultrapasse os ${t.n} carros à frente antes de ${t.dist} metros, sem encostar em nenhum.`,
+      pass: `Ultrapasse os ${t.n} carros à frente antes da faixa branca. São o mesmo modelo, mais lentos, e seguram a faixa da direita: passe pela esquerda. Toques leves são tolerados; batidas desclassificam.`,
       lap: `Uma volta lançada completa em ${tn} com o ${cn}${t.weather === 1 ? ', em tempo nublado' : ''}.`,
       drift: `Some pontos de drift em ${t.dist} metros de ${tn}. Escorregue com a traseira sem sair da pista.` }[t.type];
     if (t.type === 'seg' && type === 'drift') t.name = 'Trecho técnico';
@@ -4856,9 +5100,30 @@ const TEST_REF = {};
 function testGeometry(t) {
   const T = getTR(trackIdx(t.track)).fwd;
   let i0 = Math.round(t.s0 * T.len / T.ds) % T.N;
-  if (t.type === 'cones') { let best = i0, bv = 1e9; for (let k2 = 0; k2 < T.N; k2 += 10) { const j = (i0 + k2) % T.N; let c = 0; for (let m = 0; m < Math.round(t.dist / T.ds); m += 4) c += Math.abs(T.curv[(j + m) % T.N]); if (c < bv) { bv = c; best = j; } if (bv < 0.02) break; } i0 = best; }
-  const dist = t.type === 'lap' ? T.len : t.dist;
+  if (t.type === 'cones' || t.type === 'pass') { const win = t.type === 'pass' ? 320 : t.dist; let best = i0, bv = 1e9; for (let k2 = 0; k2 < T.N; k2 += 10) { const j = (i0 + k2) % T.N; let c = 0; for (let m = 0; m < Math.round(win / T.ds); m += 4) c += Math.abs(T.curv[(j + m) % T.N]); if (c < bv) { bv = c; best = j; } if (bv < 0.02) break; } i0 = best; }
+  const dist = t.type === 'lap' ? T.len : t.type === 'pass' ? (t._pd < 0 ? 320 : passPlan(t)) : t.dist;
   return { T, i0, dist };
+}
+// prova de ultrapassagem justa: simula o jogador (pilotagem limpa) e cada adversário sozinhos,
+// acha onde o jogador passaria o último deles e dá folga generosa para quem precisa achar espaço
+const PASS_GAP0 = 40, PASS_GAP = 30, PASS_POW = 0.55, PASS_SKILL = 0.6;
+function passPlan(t) {
+  if (t._pd) return t._pd;
+  const spec = carById(t.car), T = getTR(trackIdx(t.track)).fwd, dt = 1 / 60;
+  t._pd = -1; const i0 = testGeometry(Object.assign({}, t, { type: 'cones', dist: 320 })).i0; t._pd = 0;
+  const run = (start, pow, skill, v0, lane) => {
+    const c = newCar(spec, { ai: true, skill, powMul: pow }); c.prof = speedProfile(T, spec.grip, skill, spec.drive); if (lane !== undefined) c.forceOff = lane;
+    placeOnTrack(c, T, i0 + Math.round(start / T.ds), T.roff[(i0 + Math.round(start / T.ds)) % T.N]); c.vx = Math.sin(c.h) * v0; c.vz = Math.cos(c.h) * v0;
+    const out = []; let prog = start, ps = c.s;
+    for (let k2 = 0; k2 < 60 * 150; k2++) { stepCar(c, aiDrive(c, [c], T, dt), dt, T, null); let d = c.s - ps; if (d < -T.len / 2) d += T.len; if (d > T.len / 2) d -= T.len; prog += d; ps = c.s; if (k2 % 6 === 0) out.push(prog); }
+    return out;
+  };
+  const me = run(0, 1, 1, t.v0 / 3.6), opp = [];
+  for (let n = 0; n < t.n; n++) opp.push(run(PASS_GAP0 + n * PASS_GAP, PASS_POW, PASS_SKILL, t.v0 / 3.6 * 0.8, -(RW - 2.3)));
+  let D = 3000;
+  for (let s = 0; s < me.length; s++) { const lead = Math.max(...opp.map(o => o[Math.min(s, o.length - 1)])); if (me[s] > lead + 25) { D = me[s]; break; } }
+  t._pd = Math.min(3200, Math.ceil((D * 1.5 + 100) / 50) * 50);
+  return t._pd;
 }
 function testRef(t) {
   if (TEST_REF[t.id]) return TEST_REF[t.id];
@@ -4882,7 +5147,7 @@ function testRef(t) {
 }
 function testTargets(t) {
   if (t.type === 'drift') { const b = { C: 900, B: 1300, A: 1700 }[t.id[0]] || 900; return { ouro: b * 1.6, prata: b * 1.25, bronze: b, score: true }; }
-  const r = testRef(t) * (t.type === 'cones' ? 1.28 : t.type === 'pass' ? 1.12 : 1) * (t.weather === 2 ? 1.06 : 1);
+  const r = testRef(t) * (t.type === 'cones' ? 1.28 : t.type === 'pass' ? 1.02 : 1) * (t.weather === 2 ? 1.06 : 1);
   return { ouro: r * 1.03, prata: r * 1.08, bronze: r * 1.15 };
 }
 function testResult(id) { return CR().lic.tests[id] || null; }
@@ -5258,7 +5523,7 @@ function startRace(cfgIn) {
   const D = cfg.diff;
   for (let k = 0; k < total; k++) {
     const isP = k === total - 1, a = cfg.ai && !isP ? cfg.ai[k] : null;
-    const cs = isP ? spec : a ? a.spec : pickGrid(base, cfg.grid | 0);
+    const cs = isP ? spec : a ? a.spec : passN ? spec : pickGrid(base, cfg.grid | 0);
     const vs = isP ? base : cs;
     let color = isP ? myPaint : a && a.color ? a.color : vs.brand === 'stock' ? livPool[k % livPool.length].id : (colorsOf(vs).length ? colorsOf(vs)[(k * 3 + 1) % colorsOf(vs).length].hex : pal[(k * 3 + 1) % pal.length]);
     if (!isP && vs.brand !== 'stock' && vs.id === base.id && color === myPaint) color = pal[k % pal.length];
@@ -5271,10 +5536,10 @@ function startRace(cfgIn) {
       const g = testGeometry(cfg.test), back = cfg.test.type === 'lap' ? Math.round(6 / T.ds) : 0;
       placeOnTrack(c, T, g.i0 - back, 0); const v0 = cfg.test.v0 / 3.6; c.vx0 = Math.sin(c.h) * v0; c.vz0 = Math.cos(c.h) * v0;
     } else if (test && passN) {
-      const g = testGeometry(cfg.test); placeOnTrack(c, T, g.i0 + Math.round((45 + k * 55) / T.ds), k % 2 ? -2 : 2);
-      c.powMul = 0.62; c.skill = 0.7; const v0 = cfg.test.v0 / 3.6 * 0.8; c.vx0 = Math.sin(c.h) * v0; c.vz0 = Math.cos(c.h) * v0;
+      const g = testGeometry(cfg.test); placeOnTrack(c, T, g.i0 + Math.round((PASS_GAP0 + k * PASS_GAP) / T.ds), -(RW - 2.3));
+      c.tp = PASS_GAP0 + k * PASS_GAP; c.tps = null; c.powMul = PASS_POW; c.skill = PASS_SKILL; c.forceOff = -(RW - 2.3); // adversários seguram a faixa da direita, deixando a esquerda livre const v0 = cfg.test.v0 / 3.6 * 0.8; c.vx0 = Math.sin(c.h) * v0; c.vz0 = Math.cos(c.h) * v0;
     } else { const sm = -10 - k * 7.5, lat = k % 2 ? -2.8 : 2.8; placeOnTrack(c, T, T.N + Math.round(sm / T.ds), lat); }
-    c.prof = speedProfile(T, cs.grip * grip, passN && !isP ? 0.7 : skill, cs.drive);
+    c.prof = speedProfile(T, cs.grip * grip, passN && !isP ? PASS_SKILL : skill, cs.drive);
     c.vis = makeCarVisual(vs, vcol, null, vopt);
     syncCarVis(c, T, 0);
     cars.push(c);
@@ -5320,18 +5585,20 @@ function testStep(R, dt) {
   let d = P.s - X.ps; if (d < -R.T.len / 2) d += R.T.len; if (d > R.T.len / 2) d -= R.T.len; X.prog += d; X.ps = P.s;
   if (P.surf) X.offT += dt; else X.offT = Math.max(0, X.offT - dt * 2);
   let fail = null;
-  if (X.offT > 0.35) fail = 'Saiu do asfalto';
+  if (X.offT > (X.t.type === 'pass' ? 1.2 : 0.35)) fail = 'Saiu do asfalto';
   if ((P.wallHit || 0) > 1.5) fail = 'Bateu no muro';
   P.wallHit = 0;
   if (!X.tg.score && R.t > X.tg.bronze * 2.2) fail = 'Tempo esgotado';
   for (const cn of X.cones) if (Math.hypot(P.x - cn[0], P.z - cn[1]) < 1.15) fail = 'Derrubou um cone';
-  if (X.t.type === 'pass' && (P.carHit || 0) > 1) fail = 'Encostou num adversário';
+  // progresso de cada carro medido desde a largada da prova (não depende da linha de chegada da pista)
+  if (X.t.type === 'pass') for (const c of R.cars) { if (c.tp === undefined) c.tp = 0; if (c.tps == null) c.tps = c.s; let d = c.s - c.tps; if (d < -R.T.len / 2) d += R.T.len; if (d > R.T.len / 2) d -= R.T.len; c.tp += d; c.tps = c.s; }
+  if (X.t.type === 'pass' && (P.carHit || 0) > 3.5) fail = 'Bateu num adversário';
   P.carHit = 0;
   if (X.t.type === 'stop') {
     if (X.prog > X.dist + 6) fail = 'Passou da zona de frenagem';
     else if (X.prog > X.dist - 6 && P.spd < 0.5) X.done = { time: R.t };
   } else if (X.prog >= X.dist) {
-    if (X.t.type === 'pass') { const ahead = R.cars.filter(c => c !== P && (c.dist > P.dist)).length; if (ahead) fail = 'Não ultrapassou todos (' + ahead + ' à frente)'; else X.done = { time: R.t }; }
+    if (X.t.type === 'pass') { const ahead = R.cars.filter(c => c !== P && c.tp > P.tp).length; if (ahead) fail = 'Não ultrapassou todos (' + ahead + ' à frente)'; else X.done = { time: R.t }; }
     else if (X.t.type === 'drift') { kBank(R.k); X.done = { time: R.t, score: R.k.driftScore || 0 }; }
     else X.done = { time: R.t };
   }

@@ -15,9 +15,14 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # O pacote 'tools' foi removido do Android SDK; instalamos só o necessário
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
       - name: Instalar dependências
         run: npm install
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       - name: Gerar projeto Android
         run: npm run android:prepare
       - name: Compilar APK
